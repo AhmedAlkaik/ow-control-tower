@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <base target="_top">
+    <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --primary: #00205b;
+            /* Official OW Navy Blue */
+            --primary-hover: #00133a;
+            --success: #059669;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --ow-gold: #d4af37;
+            /* Metallic Gold */
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        h3 {
+            margin: 0;
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 3px solid var(--ow-gold);
+            padding-bottom: 4px;
+            display: inline-block;
+        }
+
+        .info-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .info-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .status-badge {
+            display: inline-block;
+            background-color: rgba(212, 175, 55, 0.15);
+            /* Gold tint */
+            color: var(--primary);
+            /* Navy text */
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-top: 8px;
+            border: 1px solid rgba(212, 175, 55, 0.4);
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+
+        input,
+        select {
+            background-color: #fafafa;
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-family: 'Outfit', sans-serif;
+            transition: all 0.2s ease;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--ow-gold);
+            box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.3);
+        }
+
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            font-family: 'Outfit', sans-serif;
+            transition: background-color 0.2s, transform 0.1s;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover);
+            transform: scale(1.02);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn.success {
+            background-color: var(--success);
+        }
+
+        .btn.success:hover {
+            background-color: #047857;
+        }
+
+        /* KPI Dashboard CSS */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 20px;
+        }
+
+        .kpi-card {
+            background-color: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .kpi-card:hover {
+            border-color: var(--ow-gold);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(212, 175, 55, 0.15);
+        }
+
+        .kpi-val {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            line-height: 1;
+        }
+
+        .kpi-label {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 5px;
+        }
+
+        .kpi-all {
+            grid-column: span 2;
+            background-color: rgba(0, 32, 91, 0.04);
+            border-color: var(--primary);
+        }
+
+        .loader {
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+            display: none;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Action sections */
+        .action-section {
+            display: none;
+            animation: fadeIn 0.4s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        #error-msg {
+            color: #ef4444;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        /* Tabs */
+        .tab-btn {
+            flex: 1;
+            background: none;
+            border: none;
+            padding: 10px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active-tab {
+            color: var(--primary);
+            border-bottom: 3px solid var(--primary);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+        <div>
+            <h3>Control Tower</h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 5px;">Contextual automation for
+                procurement.</p>
+        </div>
+        <div style="text-align: right;">
+            <select id="buyer-select"
+                style="font-size: 0.75rem; font-weight: bold; padding: 4px; border-color: var(--primary); border-radius: 4px; max-width: 140px; color: var(--primary);"
+                onchange="handleBuyerChange()">
+                <option value="ALL">🌎 All Buyers</option>
+            </select>
+            <div style="font-size: 0.65rem; color: var(--text-muted); margin-top: 2px;">PORTFOLIO VIEW</div>
+        </div>
+    </div>
+
+    <!-- HARD ROUTING BUTTON FOR GOOGLE SHEETS GRID -->
+    <button class="btn" onclick="openFilteredGrid()"
+        style="display: block; width: 100%; text-decoration: none; text-align: center; margin-bottom: 20px; font-size: 0.8rem; background-color: white; color: var(--primary); border: 2px solid var(--primary);">
+        &#128279; Open Filtered Grid in New Tab
+    </button>
+
+    <!-- LAUNCH ACTION POPUP BUTTON -->
+    <button class="btn success" style="margin-bottom: 20px; font-size: 0.9rem;" onclick="showActionForm()">
+        ⚡ OPEN DATA ENTRY FORM
+    </button>
+
+    <!-- SYSTEM LOGS -->
+    <div class="loader" id="loader"></div>
+    <div id="error-msg"></div>
+
+    <!-- VIEW: DASHBOARD -->
+    <div id="view-dash">
+
+        <!-- SEARCH DASHBOARD -->
+        <div style="margin-bottom: 20px;">
+            <input type="text" id="global-search" placeholder="Search Material, PO, BL..."
+                style="width: 100%; box-sizing: border-box; border-radius: 8px; border: 2px solid var(--border);"
+                onkeyup="if(event.key === 'Enter') executeSearch(this.value)">
+            <p style="font-size: 0.70rem; color: var(--text-muted); margin-top: 5px; text-align: center;">Press Enter to
+                search entire grid.</p>
+        </div>
+
+        <!-- NEW KPI DASHBOARD -->
+        <div id="kpi-panel" class="kpi-grid" style="grid-template-columns: 1fr 1fr 1fr;">
+            <div class="kpi-card kpi-all"
+                style="grid-column: span 3; background: linear-gradient(135deg, #00205b 0%, #00133a 100%); border-color: #00205b; color: white;"
+                onclick="applyFilter('ALL')">
+                <div class="kpi-val" id="kpi-total" style="color: white; font-size: 2rem;">🌎</div>
+                <div class="kpi-label" style="color: #d4af37; font-weight: bold;">ALL ACTIVE ORDERS</div>
+            </div>
+            <div class="kpi-card" style="border-top: 4px solid #8b5cf6;" onclick="applyFilter('Initiated Order')">
+                <div class="kpi-val" id="kpi-req" style="color: #8b5cf6;">0</div>
+                <div class="kpi-label" style="color: #6b7280; font-weight: 700;">📝 INITIATED</div>
+            </div>
+            <div class="kpi-card" style="border-top: 4px solid #fbbf24;" onclick="applyFilter('In Production')">
+                <div class="kpi-val" id="kpi-prod" style="color: #fbbf24;">0</div>
+                <div class="kpi-label" style="color: #6b7280; font-weight: 700;">🏭 PRODUCTION</div>
+            </div>
+            <div class="kpi-card" style="border-top: 4px solid #3b82f6;" onclick="applyFilter('In Transit')">
+                <div class="kpi-val" id="kpi-trans" style="color: #3b82f6;">0</div>
+                <div class="kpi-label" style="color: #6b7280; font-weight: 700;">🚢 IN TRANSIT</div>
+            </div>
+            <div class="kpi-card" style="border-top: 4px solid #f59e0b; grid-column: span 1;"
+                onclick="applyFilter('Under Clearance')">
+                <div class="kpi-val" id="kpi-clear" style="color: #f59e0b;">0</div>
+                <div class="kpi-label" style="color: #6b7280; font-weight: 700;">🛃 CLEARANCE</div>
+            </div>
+            <div class="kpi-card" style="border-top: 4px solid #10b981; grid-column: span 2;"
+                onclick="applyFilter('Completed')">
+                <div class="kpi-val" id="kpi-comp" style="color: #10b981;">0</div>
+                <div class="kpi-label" style="color: #6b7280; font-weight: 700;">✅ COMPLETED</div>
+            </div>
+        </div>
+
+        <!-- SIDEBAR SEARCH RESULTS REPOSITORY -->
+        <div id="results-panel" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h4 style="margin: 0; color: var(--primary); text-transform: uppercase;">Search Results</h4>
+                <button class="btn"
+                    style="padding: 4px 8px; font-size: 0.7rem; background-color: transparent; border: 1px solid var(--border); color: var(--text);"
+                    onclick="closeResults()">Clear</button>
+            </div>
+            <div id="results-list" style="max-height: 350px; overflow-y: auto;">
+                <!-- Javascript injects cards here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentBuyerFilter = "ALL";
+
+        Office.onReady((info) => {
+            if (info.host === Office.HostType.Excel) {
+                initApp();
+                // Start the background real-time sync engine
+                setInterval(() => {
+                    if (document.getElementById('kpi-panel').style.display !== 'none') {
+                        loadKPIs(true);
+                    }
+                }, 2500);
+            }
+        });
+
+        async function initApp() {
+            showLoading(true);
+            try {
+                await Excel.run(async (context) => {
+                    const sheet = context.workbook.worksheets.getItemOrNullObject("Tracker");
+                    await context.sync();
+                    if (sheet.isNullObject) {
+                        showLoading(false);
+                        document.getElementById('error-msg').innerText = "Tracker sheet not found.";
+                        return;
+                    }
+
+                    const usedRange = sheet.getUsedRange();
+                    usedRange.load("values");
+                    await context.sync();
+
+                    const values = usedRange.values;
+                    let buyers = [];
+                    if (values.length > 1) {
+                        for (let i = 1; i < values.length; i++) {
+                            let b = values[i][34]; // Col 35 - buyerEmail
+                            if (b && String(b).trim() !== "") {
+                                buyers.push(String(b).trim());
+                            }
+                        }
+                    }
+                    buyers = [...new Set(buyers)].sort();
+
+                    let currentUser = "ALL";
+
+                    const appData = { buyers: buyers, currentUser: currentUser };
+
+                    const select = document.getElementById('buyer-select');
+
+                    if (appData.buyers && appData.buyers.length > 0) {
+                        appData.buyers.forEach(b => {
+                            let opt = document.createElement('option');
+                            opt.value = String(b);
+                            opt.text = "👤 " + String(b).split("@")[0];
+                            select.appendChild(opt);
+                        });
+                    } else {
+                        let opt = document.createElement('option');
+                        opt.value = "NONE";
+                        opt.text = "⚠️ Type Emails in Col 36";
+                        select.appendChild(opt);
+                    }
+
+                    let hasMatch = false;
+                    for (let i = 0; i < select.options.length; i++) {
+                        if (select.options[i].value === appData.currentUser) {
+                            hasMatch = true;
+                            break;
+                        }
+                    }
+                    if (appData.currentUser && hasMatch) {
+                        select.value = appData.currentUser;
+                    }
+
+                    currentBuyerFilter = select.value;
+                    handleBuyerChange();
+                });
+            } catch (error) {
+                onError(error);
+            }
+        }
+
+        function handleBuyerChange() {
+            currentBuyerFilter = document.getElementById('buyer-select').value;
+            loadKPIs();
+        }
+
+        function openFilteredGrid() {
+            const baseSpreadsheetUrl = "https://docs.google.com/spreadsheets/d/1wnI1U98GqL0fYNlv5PKCQ7yMp1zfUPFfQ8UE_0d9T5A/edit#gid=313093570";
+            const fvidMap = {
+                "ALL": "",
+                "ahmedalkaik04": "310711223",
+                "ghaidaa.120240050": "2044244065"
+            };
+
+            let fvid = "";
+            if (currentBuyerFilter === "ALL") {
+                fvid = "";
+            } else {
+                let lowerFilter = currentBuyerFilter.toLowerCase();
+                for (const [key, value] of Object.entries(fvidMap)) {
+                    if (key === "ALL") continue;
+                    if (lowerFilter.includes(key.toLowerCase())) {
+                        fvid = value;
+                        break;
+                    }
+                }
+            }
+            const finalUrl = baseSpreadsheetUrl + (fvid ? ("&fvid=" + fvid) : "");
+            window.open(finalUrl, "_blank");
+        }
+
+        async function loadKPIs(silent) {
+            if (!silent) showLoading(true);
+            try {
+                await Excel.run(async (context) => {
+                    const sheet = context.workbook.worksheets.getItemOrNullObject("Tracker");
+                    await context.sync();
+                    if (sheet.isNullObject) return;
+
+                    const range = sheet.getUsedRange();
+                    range.load("values");
+                    await context.sync();
+
+                    const data = range.values;
+                    let counts = {
+                        "Initiated Order": 0,
+                        "In Production": 0,
+                        "In Transit": 0,
+                        "Under Clearance": 0,
+                        "Completed": 0,
+                        "TOTAL_ACTIVE": 0
+                    };
+
+                    if (data.length > 1) {
+                        for (let i = 1; i < data.length; i++) {
+                            let state = data[i][32] || "Initiated Order";
+                            let buyer = data[i][34];
+
+                            if (currentBuyerFilter && currentBuyerFilter !== "ALL" && String(buyer) !== currentBuyerFilter) continue;
+
+                            if (state && state !== "Archived" && state !== "Closed") {
+                                counts["TOTAL_ACTIVE"]++;
+                            }
+                            if (counts[state] !== undefined) counts[state]++;
+                        }
+                    }
+
+                    if (!silent) showLoading(false);
+                    document.getElementById('kpi-total').innerText = counts["TOTAL_ACTIVE"] || 0;
+                    document.getElementById('kpi-req').innerText = counts["Initiated Order"] || 0;
+                    document.getElementById('kpi-prod').innerText = counts["In Production"] || 0;
+                    document.getElementById('kpi-trans').innerText = counts["In Transit"] || 0;
+                    document.getElementById('kpi-clear').innerText = counts["Under Clearance"] || 0;
+                    document.getElementById('kpi-comp').innerText = counts["Completed"] || 0;
+                });
+            } catch (error) {
+                if (!silent) onError(error);
+            }
+        }
+
+        function getStateColorConfig(state) {
+            if (state === "In Transit") return { bg: '#d0e3ff', border: '#3b82f6', text: '#1e3a8a' };
+            if (state === "Under Clearance") return { bg: '#fef7e0', border: '#f59e0b', text: '#78350f' };
+            if (state === "Completed") return { bg: '#bdf4cb', border: '#10b981', text: '#064e3b' };
+            if (state === "Initiated Order") return { bg: '#f3e8ff', border: '#8b5cf6', text: '#4c1d95' };
+            if (state === "Archived") return { bg: '#f1f5f9', border: '#94a3b8', text: '#475569' };
+            return { bg: '#ffffff', border: '#fbbf24', text: '#92400e' };
+        }
+
+        async function executeSearch(query) {
+            if (!query || query.trim() === '') return closeResults();
+            showLoading(true);
+
+            try {
+                await Excel.run(async (context) => {
+                    const sheet = context.workbook.worksheets.getItemOrNullObject("Tracker");
+                    await context.sync();
+                    if (sheet.isNullObject) return;
+
+                    const range = sheet.getUsedRange();
+                    range.load("values");
+                    await context.sync();
+
+                    const data = range.values;
+                    let results = [];
+                    let safeQuery = query.toLowerCase().trim();
+
+                    for (let i = 1; i < data.length; i++) {
+                        let row = data[i];
+                        let state = row[32] || "Initiated Order";
+                        let buyer = row[34];
+                        if (currentBuyerFilter && currentBuyerFilter !== "ALL" && String(buyer) !== currentBuyerFilter) continue;
+
+                        let rowText = row.join("|").toLowerCase();
+                        if (rowText.includes(safeQuery)) {
+                            results.push({
+                                rowIdx: i + 1,
+                                state: state || "PENDING",
+                                po: row[8] || "No PO",
+                                pr: row[1] || "No PR",
+                                supplier: row[5] || "TBD Vendor",
+                                piNo: row[6] || "",
+                                blNo: row[27] || "",
+                                delTerm: row[15] || "",
+                                colors: getStateColorConfig(state)
+                            });
+                            if (results.length > 99) break;
+                        }
+                    }
+                    renderResults(results);
+                });
+            } catch (error) {
+                onError(error);
+            }
+        }
+
+        async function applyFilter(stateFilter) {
+            document.getElementById('global-search').value = '';
+            showLoading(true);
+            try {
+                await Excel.run(async (context) => {
+                    const sheet = context.workbook.worksheets.getItemOrNullObject("Tracker");
+                    await context.sync();
+                    if (sheet.isNullObject) return;
+
+                    const range = sheet.getUsedRange();
+                    range.load("values");
+                    await context.sync();
+
+                    const data = range.values;
+                    let results = [];
+                    for (let i = 1; i < data.length; i++) {
+                        let row = data[i];
+                        let state = row[32] || "Initiated Order";
+                        let buyer = row[34];
+                        if (currentBuyerFilter && currentBuyerFilter !== "ALL" && String(buyer) !== currentBuyerFilter) continue;
+
+                        let match = false;
+                        if (stateFilter === "ALL" && state !== "Archived" && state !== "Closed" && state) {
+                            match = true;
+                        } else if (state === stateFilter) {
+                            match = true;
+                        }
+
+                        if (match) {
+                            results.push({
+                                rowIdx: i + 1,
+                                state: state || "PENDING",
+                                po: row[8] || "No PO",
+                                pr: row[1] || "No PR",
+                                supplier: row[5] || "TBD Vendor",
+                                piNo: row[6] || "",
+                                blNo: row[27] || "",
+                                delTerm: row[15] || "",
+                                colors: getStateColorConfig(state)
+                            });
+                            if (results.length > 99) break;
+                        }
+                    }
+                    renderResults(results);
+                });
+            } catch (error) {
+                onError(error);
+            }
+        }
+
+        function renderResults(res) {
+            showLoading(false);
+            document.getElementById('kpi-panel').style.display = 'none';
+            document.getElementById('results-panel').style.display = 'block';
+
+            const list = document.getElementById('results-list');
+            list.innerHTML = '';
+
+            if (res.length === 0) {
+                list.innerHTML = '<p style="font-size:0.8rem; color:var(--text-muted);">No matching rows found.</p>';
+            } else {
+                res.forEach(item => {
+                    let div = document.createElement('div');
+
+                    let bg = item.colors ? item.colors.bg : 'white';
+                    let border = item.colors ? item.colors.border : '#e2e8f0';
+                    let text = item.colors ? item.colors.text : '#00205b';
+
+                    div.style = `background: linear-gradient(to right, ${bg}, #ffffff 15%); border-left: 4px solid ${border}; border-top: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; border-radius: 6px; padding: 10px; margin-bottom: 8px; cursor: pointer;`;
+
+                    div.onmouseover = function () { this.style.borderColor = "#c5a059"; };
+                    div.onmouseout = function () { this.style.borderLeftColor = border; this.style.borderTopColor = "#e2e8f0"; this.style.borderRightColor = "#e2e8f0"; this.style.borderBottomColor = "#e2e8f0"; };
+                    div.onclick = function () {
+                        activateRow(item.rowIdx);
+                    };
+
+                    let subInfo = [];
+                    if (item.piNo) subInfo.push("PI: " + item.piNo);
+                    if (item.blNo) subInfo.push("BL: " + item.blNo);
+                    if (item.delTerm) subInfo.push("Term: " + item.delTerm);
+
+                    div.innerHTML = `<div style="font-weight:700; color:var(--primary); font-size:0.9rem;">${item.pr} | ${item.po}</div>
+                                     <div style="font-size:0.75rem; color:#64748b; margin-top:3px;">${item.supplier}</div>
+                                     ${subInfo.length > 0 ? `<div style="font-size:0.70rem; color:var(--text-muted); margin-top:2px;">${subInfo.join(" | ")}</div>` : ''}
+                                     <div style="font-size:0.75rem; font-weight:700; color:${text}; margin-top:4px; text-transform: uppercase;">${item.state}</div>`;
+                    list.appendChild(div);
+                });
+            }
+        }
+
+        function closeResults() {
+            document.getElementById('global-search').value = '';
+            document.getElementById('results-panel').style.display = 'none';
+            document.getElementById('kpi-panel').style.display = 'grid';
+            loadKPIs(true);
+        }
+
+        async function activateRow(rowIdx) {
+            try {
+                await Excel.run(async (context) => {
+                    const sheet = context.workbook.worksheets.getItemOrNullObject("Tracker");
+                    await context.sync();
+                    if (sheet.isNullObject) return;
+
+                    const range = sheet.getRangeByIndexes(rowIdx - 1, 0, 1, 36);
+                    range.select();
+                    await context.sync();
+                });
+            } catch (error) {
+                onError(error);
+            }
+        }
+
+        function showActionForm() {
+            Office.context.ui.displayDialogAsync('https://ahmedalkaik.github.io/ow-control-tower/ActionDialog.html', { height: 75, width: 40, displayInIframe: true });
+        }
+
+        function hideAllSections() {
+            const secs = document.querySelectorAll('.action-section');
+            secs.forEach(s => s.style.display = 'none');
+        }
+        function showLoading(show) {
+            const l = document.getElementById('loader');
+            if (l) l.style.display = show ? 'block' : 'none';
+        }
+        function onError(err) {
+            showLoading(false);
+            const e = document.getElementById('error-msg');
+
+            let msg = typeof err === 'string' ? err : (err.message || 'An error occurred');
+            if (err instanceof OfficeExtension.Error) {
+                msg = err.code + ": " + err.message;
+            }
+
+            if (e) e.innerText = msg;
+            else console.error(err);
+        }
+    </script>
+</body>
+
+</html>

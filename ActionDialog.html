@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <base target="_top">
+    <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --primary: #00205b;
+            --primary-hover: #00133a;
+            --success: #059669;
+            --warning: #d97706;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --ow-gold: #d4af37;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text);
+            margin: 0;
+            padding: 15px;
+            font-size: 0.85rem;
+        }
+
+        .info-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.05);
+            margin-bottom: 15px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            background-color: rgba(212, 175, 55, 0.15);
+            color: var(--primary);
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-top: 5px;
+            border: 1px solid rgba(212, 175, 55, 0.4);
+        }
+
+        .form-group {
+            margin-bottom: 10px;
+        }
+
+        label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 3px;
+            font-weight: 600;
+            display: block;
+        }
+
+        input,
+        select {
+            width: 100%;
+            box-sizing: border-box;
+            background-color: #fafafa;
+            border: 1px solid var(--border);
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--ow-gold);
+            box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.2);
+        }
+
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover);
+            transform: scale(1.02);
+        }
+
+        .btn.success {
+            background-color: var(--success);
+        }
+
+        .btn.success:hover {
+            background-color: #047857;
+        }
+
+        .btn.secondary {
+            background-color: var(--text-muted);
+        }
+
+        details {
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            margin-bottom: 10px;
+            background-color: white;
+            overflow: hidden;
+        }
+
+        summary {
+            font-weight: 700;
+            cursor: pointer;
+            padding: 10px;
+            background-color: #f1f5f9;
+            color: var(--primary);
+            font-size: 0.8rem;
+        }
+
+        .details-content {
+            padding: 12px;
+        }
+
+        .loader {
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+            display: none;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        #error-msg {
+            color: #ef4444;
+            font-size: 0.8rem;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .flex-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .flex-row>div {
+            flex: 1;
+        }
+
+        /* Edit Override UI */
+        body.edit-mode .form-group {
+            display: block !important;
+        }
+
+        body.edit-mode .flex-row {
+            display: flex !important;
+        }
+
+        body.edit-mode details {
+            display: block !important;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- CONTEXTUAL ENGINE -->
+    <div id="top-card" class="info-card"
+        style="border-left: 4px solid var(--ow-gold); display: flex; justify-content: space-between; align-items: flex-start;">
+        <div>
+            <div style="font-size: 0.70rem; color: var(--text-muted); text-transform: uppercase;">Active Workspace</div>
+            <div id="ctx-po" style="font-weight: 700; font-size: 1rem; color: var(--primary);">Synchronizing...</div>
+            <div id="ctx-supplier" style="font-size: 0.80rem; font-weight: 600; margin-top: 2px;">-</div>
+            <div id="ctx-sub" style="font-size: 0.70rem; color: var(--text-muted); margin-top: 2px;"></div>
+            <div id="ctx-state" class="status-badge" style="margin-top: 6px;">Detecting...</div>
+        </div>
+        <div style="text-align: right;">
+            <label
+                style="font-size: 0.7rem; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; gap: 4px; background: #f8fafc; padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border);">
+                <input type="checkbox" id="edit-mode-toggle"
+                    onchange="document.body.classList.toggle('edit-mode', this.checked)">
+                ✏️ Edit All
+            </label>
+        </div>
+    </div>
+
+    <div class="loader" id="loader"></div>
+    <div id="error-msg"></div>
+
+    <div id="completed-msg"
+        style="display: none; text-align: center; padding: 30px; color: var(--success); font-weight: bold;">✅ This order
+        is Completed. No further actions required.</div>
+
+    <div id="app-body" style="display: none;">
+
+        <div class="info-card"
+            style="border: 2px solid var(--warning); background-color: #fffbeb; padding: 12px; margin-bottom: 15px;">
+            <div style="font-size: 0.9rem; font-weight: bold; color: var(--warning); margin-bottom: 8px;">⏱️ Critical
+                Date Updater</div>
+            <div class="flex-row" style="align-items: flex-end; gap: 8px;">
+                <div class="form-group" style="margin: 0; flex: 1;">
+                    <label style="color: #b45309; font-weight: bold;">ETD (Target/Actual)</label>
+                    <input type="date" id="v-urgent-etd" onclick="this.showPicker()"
+                        onchange="syncBinding('v-etd', this.value)" style="border: 1px solid var(--warning);">
+                </div>
+                <div class="form-group" style="margin: 0; flex: 1;">
+                    <label style="color: #b45309; font-weight: bold;">ETA (Vessel Arrival)</label>
+                    <input type="date" id="v-urgent-eta" onclick="this.showPicker()"
+                        onchange="syncBinding('v-eta', this.value)" style="border: 1px solid var(--warning);">
+                </div>
+                <button class="btn" style="flex: 0.5; background-color: var(--warning); color: white; padding: 8px;"
+                    onclick="submitData(false)">🔄 Update</button>
+            </div>
+        </div>
+
+        <details id="det-req">
+            <summary>📋 Phase 0: Initiated Order (Pre-PO)</summary>
+            <div class="details-content">
+                <div class="flex-row">
+                    <div class="form-group"><label>Company</label><input type="text" id="v-company"></div>
+                    <div class="form-group"><label>PR Number</label><input type="text" id="v-prNo"></div>
+                </div>
+                <div class="flex-row">
+                    <div class="form-group"><label>PR Date</label><input type="date" id="v-prDate"
+                            onclick="this.showPicker()"></div>
+                    <div class="form-group"><label>Item Description</label><input type="text" id="v-desc"></div>
+                </div>
+                <div class="flex-row">
+                    <div class="form-group"><label>Quantity (TO)</label><input type="number" id="v-qty"></div>
+                    <div class="form-group"><label>Req. Del. Date</label><input type="date" id="v-reqDelDate"
+                            onclick="this.showPicker()"></div>
+                </div>
+                <div class="flex-row">
+                    <div class="form-group"><label>Buyer Email</label><input type="email" id="v-buyerEmail"></div>
+                    <div class="form-group" style="display:none;"></div>
+                </div>
+            </div>
+        </details>
+
+        <details id="det-prod">
+            <summary>📦 Phase 1: Production & Core Data</summary>
+            <div class="details-content">
+                <div class="flex-row">
+                    <div class="form-group"><label>Supplier</label><input type="text" id="v-supplier"></div>
+                    <div class="form-group"><label>Vendor Email</label><input type="email" id="v-vendorEmail"></div>
+                </div>
+                <div class="flex-row">
+                    <div class="form-group"><label>PO Number</label><input type="text" id="v-poNo"></div>
+                    <div class="form-group"><label>PO Issuance Date</label><input type="date" id="v-poIssDate"
+                            onclick="this.showPicker()"></div>
+                </div>
+                <div class="flex-row">
+                    <div class="form-group"><label>PO Appr Date</label><input type="date" id="v-poApprDate"
+                            onclick="this.showPicker()"></div>
+                    <div class="form-group"><label>Target Lead Time (Days)</label><input type="number" id="v-leadTime">
+                    </div>
+                </div>
+                <div class="flex-row">
+                    <div class="form-group"><label>Incoterm / Del. Term</label><select id="v-delTerm">
+                            <option value="">-- Select --</option>
+                        </select></div>
+                    <div class="form-group"><label>PI Number</label><input type="text" id="v-piNo"></div>
+                </div>
+                <div class="flex-row">
+                    <div class="form-group"><label>Est Readiness Date</label><input type="date" id="v-estReadiness"
+                            onclick="this.showPicker()"></div>
+                    <div class="form-group" style="display:none;"></div>
+                </div>
+            </div>
+        </details>
+
+        <details id="det-transit">
+            <summary>🚢 Phase 2: Pre-Transit / Shipping Docs</summary>
+            <div class="details-content">
+                <div class="flex-row">
+                    <div class="form-group"><label>Bank Name</label><select id="v-bank">
+                            <option value="">-- Select --</option>
+                        </select></div>
+                    <div class="form-group"><label>Bank/Payment Date</label><input type="date" id="v-bankDate"
+                            onclick="this.showPicker()"></div>
+                </div>
+                <div class="flex-row">
+                    <div class="form-group"><label>Containers (No.)</label><input type="number" id="v-containers"></div>
+                    <div class="form-group"><label>Container Type</label><input type="text" id="v-containerType"></div>
+                </div>
+                <div class="flex-row">
+                    <div class="form-group"><label>ETD (Actual)</label><input type="date" id="v-etd"
+                            onchange="syncBinding('v-urgent-etd', this.value)" onclick="this.showPicker()"></div>
+                    <div class="form-group"><label>ETA</label><input type="date" id="v-eta"
+                            onchange="syncBinding('v-urgent-eta', this.value)" onclick="this.showPicker()"></div>
+                </div>
+                <div class="flex-row">
+                    <div class="form-group"><label>BL Number</label><input type="text" id="v-blNo"></div>
+                    <div class="form-group"><label>ACID Number</label><input type="text" id="v-acid"></div>
+                </div>
+                <div class="flex-row">
+                    <div class="form-group"><label>Value</label><input type="number" id="v-value"></div>
+                    <div class="form-group"><label>Currency</label><select id="v-currency">
+                            <option value="">-- Select --</option>
+                        </select></div>
+                </div>
+                <div class="flex-row">
+                    <div class="form-group"><label>Payment Term</label><select id="v-payTerm">
+                            <option value="">-- Select --</option>
+                        </select></div>
+                    <div class="form-group"><label>Comm Invoice Number</label><input type="text" id="v-commInv"></div>
+                </div>
+                <div class="flex-row">
+                    <div class="form-group"><label>FOB Price (Optional)</label><input type="number" id="v-fob"></div>
+                    <div class="form-group"><label>CIF Price (Optional)</label><input type="number" id="v-cif"></div>
+                </div>
+            </div>
+        </details>
+
+        <details id="det-clearance">
+            <summary>🛃 Phase 3: Port & Customs Clearance</summary>
+            <div class="details-content">
+                <div class="form-group"><label>Doc Arrival at Port</label><input type="date" id="v-docArrival"
+                        onclick="this.showPicker()"></div>
+                <div class="form-group"><label>Shipment Release Date</label><input type="date" id="v-shipRelease"
+                        onclick="this.showPicker()"></div>
+            </div>
+        </details>
+
+        <div class="form-group" style="margin-top:10px;">
+            <label>Internal Comments / Notes</label>
+            <input type="text" id="v-comments">
+        </div>
+
+
+        <div class="flex-row" style="margin-top: 15px;">
+            <button class="btn secondary" onclick="submitData(false)">💾 Save Fields Temporarily</button>
+            <button class="btn success" id="btn-advance" onclick="handleAdvanceClick()">🚀 Advance Phase</button>
+        </div>
+        <button class="btn" style="background-color: #ef4444; color: white; width: 100%; margin-top: 10px;"
+            onclick="archiveOrder()">🗑️ Terminate / Archive Order</button>
+    </div>
+
+    <script>
+    const CONFIG = {
+        sheetName: "Tracker",
+        cols: {
+            company: 0, prNo: 1, prDate: 2, desc: 3, qty: 4,
+            supplier: 5, piNo: 6, commInv: 7, poNo: 8, poIssDate: 9,
+            fob: 10, cif: 11, value: 12, currency: 13, payTerm: 14, delTerm: 15,
+            poApprDate: 16, bank: 17, bankDate: 18, estReadiness: 19, suppConf: 20,
+            reqDelDate: 21, shipReqDate: 22, containers: 23, containerType: 24, etd: 25,
+            eta: 26, blNo: 27, acid: 28, docArrival: 29, shipRelease: 30, comments: 31,
+            state: 32, vendorEmail: 33, buyerEmail: 34, leadTime: 35
+        }
+    };
+
+    let currentRow = -1;
+    let currentState = "Initiated Order";
+    let livePollingInterval = null;
+
+    Office.onReady(function(info) {
+        if (info.host === Office.HostType.Excel) {
+            initializeDropdowns();
+            startLivePolling();
+        }
+    });
+
+    function startLivePolling() {
+        if (!livePollingInterval) {
+            livePollingInterval = setInterval(refreshData, 2500);
+            refreshData();
+        }
+    }
+
+    async function refreshData() {
+        if (document.getElementById('loader').style.display === 'block') return;
+        try {
+            await Excel.run(async (context) => {
+                const sheet = context.workbook.worksheets.getActiveWorksheet();
+                const activeCell = context.workbook.getActiveCell();
+                activeCell.load("rowIndex");
+                sheet.load("name");
+                await context.sync();
+
+                if (sheet.name !== CONFIG.sheetName) {
+                    renderContext({ error: "Please select a row in the " + CONFIG.sheetName + " sheet." });
+                    return;
+                }
+                const row = activeCell.rowIndex + 1; // 1-indexed for display
+                if (row < 2) {
+                    renderContext({ error: "Please select a valid data row (not header)." });
+                    return;
+                }
+
+                const range = sheet.getRangeByIndexes(row - 1, 0, 1, 36);
+                range.load("values");
+                await context.sync();
+
+                const data = range.values[0];
+                const state = data[CONFIG.cols.state] || "Initiated Order";
+                
+                const formatIfDate = (val) => {
+                    if (typeof val === 'number') {
+                        const d = new Date(Math.round((val - 25569) * 86400 * 1000));
+                        return d.toISOString().split('T')[0];
+                    }
+                    return val ? String(val) : "";
+                };
+
+                const ctx = {
+                    row: row,
+                    state: state,
+                    prNo: data[CONFIG.cols.prNo],
+                    poNo: data[CONFIG.cols.poNo],
+                    supplier: data[CONFIG.cols.supplier],
+                    blNo: data[CONFIG.cols.blNo],
+                    piNo: data[CONFIG.cols.piNo],
+                    delTerm: data[CONFIG.cols.delTerm],
+                    colorConfig: getStateColorConfig(state),
+                    rawObj: {
+                        company: formatIfDate(data[CONFIG.cols.company]),
+                        prNo: formatIfDate(data[CONFIG.cols.prNo]),
+                        prDate: formatIfDate(data[CONFIG.cols.prDate]),
+                        desc: formatIfDate(data[CONFIG.cols.desc]),
+                        qty: formatIfDate(data[CONFIG.cols.qty]),
+                        supplier: formatIfDate(data[CONFIG.cols.supplier]),
+                        piNo: formatIfDate(data[CONFIG.cols.piNo]),
+                        commInv: formatIfDate(data[CONFIG.cols.commInv]),
+                        poNo: formatIfDate(data[CONFIG.cols.poNo]),
+                        poIssDate: formatIfDate(data[CONFIG.cols.poIssDate]),
+                        fob: formatIfDate(data[CONFIG.cols.fob]),
+                        cif: formatIfDate(data[CONFIG.cols.cif]),
+                        value: formatIfDate(data[CONFIG.cols.value]),
+                        currency: formatIfDate(data[CONFIG.cols.currency]),
+                        payTerm: formatIfDate(data[CONFIG.cols.payTerm]),
+                        delTerm: formatIfDate(data[CONFIG.cols.delTerm]),
+                        poApprDate: formatIfDate(data[CONFIG.cols.poApprDate]),
+                        bank: formatIfDate(data[CONFIG.cols.bank]),
+                        bankDate: formatIfDate(data[CONFIG.cols.bankDate]),
+                        estReadiness: formatIfDate(data[CONFIG.cols.estReadiness]),
+                        reqDelDate: formatIfDate(data[CONFIG.cols.reqDelDate]),
+                        containers: formatIfDate(data[CONFIG.cols.containers]),
+                        containerType: formatIfDate(data[CONFIG.cols.containerType]),
+                        etd: formatIfDate(data[CONFIG.cols.etd]),
+                        eta: formatIfDate(data[CONFIG.cols.eta]),
+                        blNo: formatIfDate(data[CONFIG.cols.blNo]),
+                        acid: formatIfDate(data[CONFIG.cols.acid]),
+                        docArrival: formatIfDate(data[CONFIG.cols.docArrival]),
+                        shipRelease: formatIfDate(data[CONFIG.cols.shipRelease]),
+                        comments: formatIfDate(data[CONFIG.cols.comments]),
+                        vendorEmail: formatIfDate(data[CONFIG.cols.vendorEmail]),
+                        buyerEmail: formatIfDate(data[CONFIG.cols.buyerEmail]),
+                        leadTime: formatIfDate(data[CONFIG.cols.leadTime])
+                    }
+                };
+                renderContext(ctx);
+            });
+        } catch (error) {
+            onError(error);
+        }
+    }
+
+    function getStateColorConfig(state) {
+        if (state === "In Transit") return { bg: '#d0e3ff', border: '#3b82f6', text: '#1e3a8a' };
+        if (state === "Under Clearance") return { bg: '#fef7e0', border: '#f59e0b', text: '#78350f' };
+        if (state === "Completed") return { bg: '#bdf4cb', border: '#10b981', text: '#064e3b' };
+        if (state === "Initiated Order") return { bg: '#f3e8ff', border: '#8b5cf6', text: '#4c1d95' };
+        if (state === "Archived") return { bg: '#f1f5f9', border: '#94a3b8', text: '#475569' };
+        return { bg: '#ffffff', border: '#fbbf24', text: '#92400e' };
+    }
+
+    function renderContext(ctx) {
+        if (ctx.error) {
+            document.getElementById('error-msg').innerText = ctx.error;
+            document.getElementById('app-body').style.display = 'none';
+            return;
+        }
+        document.getElementById('error-msg').innerText = '';
+
+        const safeState = ctx.state ? String(ctx.state).trim() : "";
+        let isRowChange = false;
+
+        if (currentRow !== ctx.row) {
+            isRowChange = true;
+            document.querySelectorAll('.dirty-input').forEach(el => el.classList.remove('dirty-input'));
+        }
+
+        currentRow = ctx.row;
+        currentState = safeState;
+
+        document.getElementById('ctx-po').innerText = `Row ${ctx.row} | ${ctx.prNo || 'No PR'} | ${ctx.poNo || 'No PO'}`;
+        document.getElementById('ctx-supplier').innerText = ctx.supplier || 'Vendor pending';
+
+        let subText = [];
+        if (ctx.piNo) subText.push("PI: " + ctx.piNo);
+        if (ctx.blNo) subText.push("BL: " + ctx.blNo);
+        if (ctx.delTerm) subText.push("Term: " + ctx.delTerm);
+        document.getElementById('ctx-sub').innerText = subText.join(" | ");
+
+        let stateEl = document.getElementById('ctx-state');
+        stateEl.innerText = safeState;
+        if (ctx.colorConfig) {
+            stateEl.style.backgroundColor = ctx.colorConfig.bg;
+            stateEl.style.color = ctx.colorConfig.text;
+            stateEl.style.borderColor = ctx.colorConfig.border;
+
+            let card = document.getElementById('top-card');
+            card.style.borderLeftColor = ctx.colorConfig.border;
+            card.style.background = `linear-gradient(to right, ${ctx.colorConfig.bg}, #ffffff 20%)`;
+        }
+
+        if (safeState === "Completed") {
+            document.getElementById('app-body').style.display = 'none';
+            let msg = document.getElementById('completed-msg');
+            msg.style.display = 'block';
+            msg.innerHTML = "✅ This order is Completed. No further actions required.";
+            msg.style.color = "var(--success)";
+            return;
+        } else if (safeState === "Archived") {
+            document.getElementById('app-body').style.display = 'none';
+            let msg = document.getElementById('completed-msg');
+            msg.style.display = 'block';
+            msg.innerHTML = "🗑️ This order has been Cancelled / Archived.";
+            msg.style.color = "var(--text-muted)";
+            return;
+        }
+
+        document.getElementById('completed-msg').style.display = 'none';
+        document.getElementById('app-body').style.display = 'block';
+        try {
+            if (ctx.rawObj) hydrateInputs(ctx.rawObj, isRowChange);
+            enforcePhaseIsolation(safeState, isRowChange);
+            configureAdvanceButton(safeState);
+        } catch (err) {
+            document.getElementById('error-msg').innerText = "UI Rendering Error: " + err.message;
+        }
+    }
+
+    document.addEventListener('input', function (e) {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+            e.target.classList.add('dirty-input');
+        }
+    });
+
+    function hydrateInputs(data, forceWipe) {
+        const map = {
+            'v-company': 'company', 'v-prNo': 'prNo', 'v-prDate': 'prDate', 'v-desc': 'desc',
+            'v-qty': 'qty', 'v-supplier': 'supplier', 'v-vendorEmail': 'vendorEmail', 'v-buyerEmail': 'buyerEmail',
+            'v-poNo': 'poNo', 'v-poIssDate': 'poIssDate', 'v-poApprDate': 'poApprDate', 'v-leadTime': 'leadTime',
+            'v-value': 'value', 'v-currency': 'currency', 'v-payTerm': 'payTerm', 'v-delTerm': 'delTerm',
+            'v-reqDelDate': 'reqDelDate', 'v-piNo': 'piNo', 'v-estReadiness': 'estReadiness',
+            'v-bank': 'bank', 'v-bankDate': 'bankDate', 'v-containers': 'containers',
+            'v-containerType': 'containerType', 'v-etd': 'etd', 'v-urgent-etd': 'etd', 'v-blNo': 'blNo', 'v-acid': 'acid',
+            'v-commInv': 'commInv', 'v-fob': 'fob', 'v-cif': 'cif',
+            'v-docArrival': 'docArrival', 'v-shipRelease': 'shipRelease', 'v-eta': 'eta', 'v-urgent-eta': 'eta', 'v-comments': 'comments'
+        };
+
+        for (let [id, key] of Object.entries(map)) {
+            let el = document.getElementById(id);
+            if (el && data[key] !== undefined) {
+                let sheetVal = String(data[key] || "");
+                if (el.tagName === 'SELECT' && sheetVal) {
+                    let exists = Array.from(el.options).some(o => o.value === sheetVal);
+                    if (!exists) {
+                        el.appendChild(new Option(sheetVal + " (Legacy)", sheetVal));
+                    }
+                }
+                if (forceWipe || !el.classList.contains('dirty-input')) {
+                    el.value = sheetVal;
+                }
+                let isFilled = sheetVal.trim() !== "";
+                let formGroup = el.closest ? el.closest('.form-group') : el.parentElement;
+                if (formGroup) {
+                    if (isFilled && !id.includes('v-urgent') && id !== 'v-comments') {
+                        formGroup.style.display = 'none';
+                    } else {
+                        formGroup.style.display = 'block';
+                    }
+                }
+            }
+        }
+        let flexRows = document.querySelectorAll('.flex-row');
+        for (let i = 0; i < flexRows.length; i++) {
+            let row = flexRows[i];
+            let formGroups = Array.from(row.querySelectorAll('.form-group'));
+            if (formGroups.length > 0) {
+                let allHidden = formGroups.every(fg => fg.style.display === 'none');
+                row.style.display = allHidden ? 'none' : 'flex';
+            }
+        }
+    }
+
+    function enforcePhaseIsolation(state, isRowChange) {
+        const phases = {
+            "Initiated Order": { el: document.getElementById('det-req'), rank: 0 },
+            "In Production": { el: document.getElementById('det-prod'), rank: 1 },
+            "In Transit": { el: document.getElementById('det-transit'), rank: 2 },
+            "Under Clearance": { el: document.getElementById('det-clearance'), rank: 3 }
+        };
+
+        let currentRank = phases[state] ? phases[state].rank : -1;
+
+        for (let key in phases) {
+            let phaseObj = phases[key];
+            if (!phaseObj.el) continue;
+
+            if (phaseObj.rank > currentRank) {
+                phaseObj.el.style.display = 'none';
+                continue;
+            }
+
+            const visibleGroups = Array.from(phaseObj.el.querySelectorAll('.form-group')).filter(el => el.style.display !== 'none');
+
+            if (key === state) {
+                phaseObj.el.style.display = 'block';
+                if (isRowChange) phaseObj.el.open = true;
+
+                let compMsgId = 'comp-msg-' + phaseObj.rank;
+                let msgEl = document.getElementById(compMsgId);
+                if (!msgEl) {
+                    msgEl = document.createElement('div');
+                    msgEl.id = compMsgId;
+                    msgEl.style = "text-align: center; color: var(--success); font-weight: bolder; padding: 15px; border: 1px dashed var(--success); border-radius: 8px; margin-bottom: 10px;";
+                    msgEl.innerHTML = "✅ All fields for this phase are currently filled!";
+                    let contentDiv = phaseObj.el.querySelector('.details-content');
+                    if (contentDiv) contentDiv.appendChild(msgEl);
+                }
+                if (msgEl) {
+                    msgEl.style.display = (visibleGroups.length === 0) ? 'block' : 'none';
+                }
+
+            } else if (visibleGroups.length > 0) {
+                phaseObj.el.style.display = 'block';
+                if (isRowChange) phaseObj.el.open = false;
+            } else {
+                phaseObj.el.style.display = 'none';
+            }
+        }
+    }
+
+    function syncBinding(targetId, val) {
+        let target = document.getElementById(targetId);
+        if (target) {
+            target.value = val;
+            target.classList.add('dirty-input');
+        }
+    }
+
+    let pendingAdvanceState = false;
+
+    function configureAdvanceButton(state) {
+        const btn = document.getElementById('btn-advance');
+        if (!btn) return;
+        let btnConfig = {
+            "Initiated Order": { label: "🚀 Advance to IN PRODUCTION", next: "In Production" },
+            "In Production": { label: "🚀 Advance to IN TRANSIT", next: "In Transit" },
+            "In Transit": { label: "🚀 Advance to UNDER CLEARANCE", next: "Under Clearance" },
+            "Under Clearance": { label: "🚀 Advance to COMPLETED", next: "Completed" }
+        };
+
+        if (btnConfig[state]) {
+            btn.innerText = btnConfig[state].label;
+            pendingAdvanceState = btnConfig[state].next;
+            btn.style.display = 'block';
+        } else {
+            pendingAdvanceState = false;
+            btn.style.display = 'none';
+        }
+    }
+
+    function validatePhaseAdvancement(nextState) {
+        let requiredFields = [];
+        if (nextState === "In Production") requiredFields = ['v-company', 'v-prNo', 'v-prDate', 'v-desc', 'v-qty', 'v-reqDelDate', 'v-buyerEmail'];
+        else if (nextState === "In Transit") requiredFields = ['v-supplier', 'v-poNo', 'v-delTerm', 'v-leadTime'];
+        else if (nextState === "Under Clearance") requiredFields = ['v-etd', 'v-blNo', 'v-acid', 'v-commInv'];
+        else if (nextState === "Completed") requiredFields = ['v-docArrival', 'v-shipRelease'];
+
+        let missing = [];
+        for (let i = 0; i < requiredFields.length; i++) {
+            let checkEl = document.getElementById(requiredFields[i]);
+            if (checkEl && !checkEl.value.trim()) {
+                let label = checkEl.parentElement.querySelector('label');
+                if (label) missing.push(label.innerText);
+            }
+        }
+        if (missing.length > 0) {
+            document.getElementById('error-msg').innerText = "❌ Missing Required Data to Advance Phase: " + missing.join(", ");
+            return false;
+        }
+        return true;
+    }
+
+    function handleAdvanceClick() {
+        if (pendingAdvanceState) {
+            if (!validatePhaseAdvancement(pendingAdvanceState)) return;
+            submitData(pendingAdvanceState);
+        }
+    }
+
+    async function submitData(targetState) {
+        document.getElementById('loader').style.display = 'block';
+        document.getElementById('app-body').style.display = 'none';
+
+        const mappings = {
+            'company': {id: 'v-company', col: CONFIG.cols.company}, 'prNo': {id: 'v-prNo', col: CONFIG.cols.prNo}, 'prDate': {id: 'v-prDate', col: CONFIG.cols.prDate},
+            'desc': {id: 'v-desc', col: CONFIG.cols.desc}, 'qty': {id: 'v-qty', col: CONFIG.cols.qty}, 'supplier': {id: 'v-supplier', col: CONFIG.cols.supplier},
+            'piNo': {id: 'v-piNo', col: CONFIG.cols.piNo}, 'commInv': {id: 'v-commInv', col: CONFIG.cols.commInv}, 'poNo': {id: 'v-poNo', col: CONFIG.cols.poNo},
+            'poIssDate': {id: 'v-poIssDate', col: CONFIG.cols.poIssDate}, 'fob': {id: 'v-fob', col: CONFIG.cols.fob}, 'cif': {id: 'v-cif', col: CONFIG.cols.cif},
+            'value': {id: 'v-value', col: CONFIG.cols.value}, 'currency': {id: 'v-currency', col: CONFIG.cols.currency}, 'payTerm': {id: 'v-payTerm', col: CONFIG.cols.payTerm},
+            'delTerm': {id: 'v-delTerm', col: CONFIG.cols.delTerm}, 'poApprDate': {id: 'v-poApprDate', col: CONFIG.cols.poApprDate}, 'bank': {id: 'v-bank', col: CONFIG.cols.bank},
+            'bankDate': {id: 'v-bankDate', col: CONFIG.cols.bankDate}, 'estReadiness': {id: 'v-estReadiness', col: CONFIG.cols.estReadiness},
+            'reqDelDate': {id: 'v-reqDelDate', col: CONFIG.cols.reqDelDate}, 'containers': {id: 'v-containers', col: CONFIG.cols.containers},
+            'containerType': {id: 'v-containerType', col: CONFIG.cols.containerType}, 'etd': {id: 'v-etd', col: CONFIG.cols.etd}, 'eta': {id: 'v-eta', col: CONFIG.cols.eta},
+            'blNo': {id: 'v-blNo', col: CONFIG.cols.blNo}, 'acid': {id: 'v-acid', col: CONFIG.cols.acid}, 'docArrival': {id: 'v-docArrival', col: CONFIG.cols.docArrival},
+            'shipRelease': {id: 'v-shipRelease', col: CONFIG.cols.shipRelease}, 'comments': {id: 'v-comments', col: CONFIG.cols.comments},
+            'vendorEmail': {id: 'v-vendorEmail', col: CONFIG.cols.vendorEmail}, 'buyerEmail': {id: 'v-buyerEmail', col: CONFIG.cols.buyerEmail}, 'leadTime': {id: 'v-leadTime', col: CONFIG.cols.leadTime}
+        };
+
+        try {
+            await Excel.run(async (context) => {
+                const sheet = context.workbook.worksheets.getActiveWorksheet();
+                let actualRow = currentRow - 1; // 0-indexed for api
+                
+                for (let key in mappings) {
+                    let map = mappings[key];
+                    let el = document.getElementById(map.id);
+                    if (el && el.classList.contains('dirty-input')) {
+                        let rangeCell = sheet.getCell(actualRow, map.col);
+                        rangeCell.values = [[el.value]];
+                    }
+                }
+                
+                if (targetState) {
+                    let rangeState = sheet.getCell(actualRow, CONFIG.cols.state);
+                    rangeState.values = [[targetState]];
+                    const rowRange = sheet.getRangeByIndexes(actualRow, 0, 1, 36);
+                    rowRange.format.fill.color = getStateColorConfig(targetState).bg;
+                }
+                
+                await context.sync();
+            });
+            
+            document.getElementById('loader').style.display = 'none';
+            currentRow = -1; // Force a full pull on next poll
+            refreshData();
+
+        } catch (error) {
+            onError(error);
+            document.getElementById('app-body').style.display = 'block';
+        }
+    }
+
+    function onError(err) {
+        document.getElementById('loader').style.display = 'none';
+        
+        let msg = typeof err === 'string' ? err : (err.message || 'An error occurred');
+        if (err instanceof OfficeExtension.Error) {
+             msg = err.code + ": " + err.message;
+        }
+
+        document.getElementById('error-msg').innerText = msg;
+    }
+
+    async function archiveOrder() {
+        if (!confirm("⚠️ Are you sure you want to Archive/Cancel this order?")) return;
+
+        document.getElementById('loader').style.display = 'block';
+        document.getElementById('app-body').style.display = 'none';
+        
+        try {
+            await Excel.run(async (context) => {
+                const sheet = context.workbook.worksheets.getActiveWorksheet();
+                let recycleSheet = context.workbook.worksheets.getItemOrNullObject("Recycle Bin");
+                await context.sync();
+
+                if (recycleSheet.isNullObject) {
+                    recycleSheet = context.workbook.worksheets.add("Recycle Bin");
+                    // Can't reliably copy headers easily in a single op, assume it gets made 
+                }
+                
+                let actualRow = currentRow - 1;
+                const srcRange = sheet.getRangeByIndexes(actualRow, 0, 1, 36);
+                srcRange.load("values");
+                await context.sync();
+                
+                const vals = srcRange.values;
+                vals[0][CONFIG.cols.state] = "Archived";
+                
+                const usedRange = recycleSheet.getUsedRangeOrNullObject();
+                usedRange.load("rowIndex, rowCount");
+                await context.sync();
+
+                let nextRow = usedRange.isNullObject ? 0 : usedRange.rowIndex + usedRange.rowCount;
+                const destRange = recycleSheet.getRangeByIndexes(nextRow, 0, 1, 36);
+                destRange.values = vals;
+                
+                srcRange.delete(Excel.DeleteShiftDirection.up);
+                await context.sync();
+            });
+
+            document.getElementById('loader').style.display = 'none';
+            currentRow = -1;
+            refreshData();
+
+        } catch (error) {
+            onError(error);
+            document.getElementById('app-body').style.display = 'block';
+        }
+    }
+
+    async function initializeDropdowns() {
+        try {
+            await Excel.run(async (context) => {
+                const sheet = context.workbook.worksheets.getItemOrNullObject("_Dropdowns");
+                await context.sync();
+                
+                if (sheet.isNullObject) return;
+                
+                const range = sheet.getUsedRange();
+                range.load("values");
+                await context.sync();
+                
+                let dropdowns = { currency: [], incoterm: [], bank: [], paymentTerm: [] };
+                let data = range.values;
+                if (data.length > 1) {
+                    for (let i = 1; i < data.length; i++) {
+                        if (data[i][0]) dropdowns.currency.push(String(data[i][0]).trim());
+                        if (data[i][1]) dropdowns.incoterm.push(String(data[i][1]).trim());
+                        if (data[i][2]) dropdowns.bank.push(String(data[i][2]).trim());
+                        if (data[i][3]) dropdowns.paymentTerm.push(String(data[i][3]).trim());
+                    }
+                }
+                
+                function fillSelect(id, values) {
+                    let el = document.getElementById(id);
+                    if (!el || !values) return;
+                    let html = '<option value="">-- Select --</option>';
+                    values.forEach(v => {
+                        html += `<option value="${v}">${v}</option>`;
+                    });
+                    el.innerHTML = html;
+                }
+                fillSelect('v-currency', dropdowns.currency);
+                fillSelect('v-delTerm', dropdowns.incoterm);
+                fillSelect('v-bank', dropdowns.bank);
+                fillSelect('v-payTerm', dropdowns.paymentTerm);
+            });
+        } catch(error) {
+            console.log("Dropdown load failed: " + error);
+        }
+    }
+</script>
+</body>
+
+</html>

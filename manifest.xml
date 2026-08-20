@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OfficeApp 
+    xmlns="http://schemas.microsoft.com/office/appforoffice/1.1" 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:type="TaskPaneApp">
+
+  <!-- Identity -->
+  <Id>b7a4216a-7440-4256-a111-e40105342898</Id>
+  <Version>1.0.0.0</Version>
+  <ProviderName>Oriental Weavers</ProviderName>
+  <DefaultLocale>en-US</DefaultLocale>
+  <DisplayName DefaultValue="Control Tower" />
+  <Description DefaultValue="Contextual automation for procurement." />
+
+  <!-- Domain Security -->
+  <AppDomains>
+    <AppDomain>https://owprocurement.netlify.app</AppDomain>
+  </AppDomains>
+
+  <!-- Target Office Application -->
+  <Hosts>
+    <Host Name="Workbook" />
+  </Hosts>
+
+  <!-- The Bridge: Full HTTPS File Route -->
+  <DefaultSettings>
+    <SourceLocation DefaultValue="https://ahmedalkaik.github.io/ow-control-tower/index.html" />
+  </DefaultSettings>
+
+  <!-- Permissions required to interact with the sheet -->
+  <Permissions>ReadWriteDocument</Permissions>
+</OfficeApp>
