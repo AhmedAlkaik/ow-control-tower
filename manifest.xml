@@ -14,7 +14,7 @@
 
   <!-- Domain Security -->
   <AppDomains>
-    <AppDomain>https://owprocurement.netlify.app</AppDomain>
+    <AppDomain>https://ahmedalkaik.github.io/ow-control-tower/</AppDomain>
   </AppDomains>
 
   <!-- Target Office Application -->

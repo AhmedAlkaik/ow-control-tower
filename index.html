@@ -666,6 +666,132 @@
             }
         }
 
+        
+        // IPC ENGINE (Task Pane to Dialog)
+        setInterval(async () => {
+            try {
+                await Excel.run(async (context) => {
+                    const sheet = context.workbook.worksheets.getActiveWorksheet();
+                    const activeCell = context.workbook.getActiveCell();
+                    activeCell.load("rowIndex");
+                    sheet.load("name");
+                    await context.sync();
+
+                    if (sheet.name !== "Tracker" || activeCell.rowIndex < 1) {
+                        localStorage.setItem('ow_ctx', JSON.stringify({ error: "Please select a valid row in the Tracker sheet." }));
+                        return;
+                    }
+
+                    const rowIdx = activeCell.rowIndex;
+                    const range = sheet.getRangeByIndexes(rowIdx, 0, 1, 36);
+                    range.load("values");
+                    await context.sync();
+
+                    const data = range.values[0];
+                    const obj = {
+                        row: rowIdx + 1,
+                        state: data[32] || "Initiated Order",
+                        supplier: data[5] || "",
+                        prNo: data[1] || "",
+                        poNo: data[8] || "",
+                        piNo: data[6] || "",
+                        blNo: data[27] || "",
+                        delTerm: data[15] || "",
+                        raw: data
+                    };
+                    localStorage.setItem('ow_ctx', JSON.stringify(obj));
+                });
+            } catch(e) {}
+        }, 1500);
+
+        // Listen for SAVE events from Action Dialog
+        window.addEventListener('storage', async function(e) {
+            if (e.key === 'ow_action' && e.newValue) {
+                const actionObj = JSON.parse(e.newValue);
+                localStorage.removeItem('ow_action'); // Clear it
+
+                if (actionObj.type === 'ARCHIVE') {
+                    await executeArchive(actionObj.row);
+                } else if (actionObj.type === 'SAVE') {
+                    await executeSave(actionObj.payload);
+                }
+            }
+        });
+
+        async function executeArchive(rowIdx) {
+            try {
+                await Excel.run(async (context) => {
+                    const sheet = context.workbook.worksheets.getItem("Tracker");
+                    let recycleSheet = context.workbook.worksheets.getItemOrNullObject("Recycle Bin");
+                    await context.sync();
+
+                    if (recycleSheet.isNullObject) {
+                        recycleSheet = context.workbook.worksheets.add("Recycle Bin");
+                    }
+                    
+                    let actualRow = rowIdx - 1;
+                    const srcRange = sheet.getRangeByIndexes(actualRow, 0, 1, 36);
+                    srcRange.load("values");
+                    await context.sync();
+                    
+                    const vals = srcRange.values;
+                    vals[0][32] = "Archived";
+                    
+                    const usedRange = recycleSheet.getUsedRangeOrNullObject();
+                    usedRange.load("rowIndex, rowCount");
+                    await context.sync();
+
+                    let nextRow = usedRange.isNullObject ? 0 : usedRange.rowIndex + usedRange.rowCount;
+                    const destRange = recycleSheet.getRangeByIndexes(nextRow, 0, 1, 36);
+                    destRange.values = vals;
+                    
+                    srcRange.delete(Excel.DeleteShiftDirection.up);
+                    await context.sync();
+                });
+                localStorage.setItem('ow_feedback', JSON.stringify({ type: 'SUCCESS' }));
+            } catch (err) {
+                localStorage.setItem('ow_feedback', JSON.stringify({ type: 'ERROR', msg: err.message }));
+            }
+        }
+
+        async function executeSave(payload) {
+            try {
+                await Excel.run(async (context) => {
+                    const sheet = context.workbook.worksheets.getItem("Tracker");
+                    let actualRow = payload.row - 1;
+                    
+                    for (let key in payload.mappings) {
+                        let map = payload.mappings[key];
+                        if (map.val !== undefined && map.val !== null) {
+                            let rangeCell = sheet.getCell(actualRow, map.col);
+                            rangeCell.values = [[map.val]];
+                        }
+                    }
+                    
+                    if (payload.targetState) {
+                        sheet.getCell(actualRow, 32).values = [[payload.targetState]];
+                        const rowRange = sheet.getRangeByIndexes(actualRow, 0, 1, 36);
+                        
+                        function getStateColorConfig(state) {
+                            if (state === "In Transit") return { bg: '#d0e3ff', border: '#3b82f6', text: '#1e3a8a' };
+                            if (state === "Under Clearance") return { bg: '#fef7e0', border: '#f59e0b', text: '#78350f' };
+                            if (state === "Completed") return { bg: '#bdf4cb', border: '#10b981', text: '#064e3b' };
+                            if (state === "Initiated Order") return { bg: '#f3e8ff', border: '#8b5cf6', text: '#4c1d95' };
+                            if (state === "Archived") return { bg: '#f1f5f9', border: '#94a3b8', text: '#475569' };
+                            return { bg: '#ffffff', border: '#fbbf24', text: '#92400e' };
+                        }
+                        
+                        rowRange.format.fill.color = getStateColorConfig(payload.targetState).bg;
+                    }
+                    
+                    await context.sync();
+                });
+                localStorage.setItem('ow_feedback', JSON.stringify({ type: 'SUCCESS' }));
+            } catch (err) {
+                localStorage.setItem('ow_feedback', JSON.stringify({ type: 'ERROR', msg: err.message }));
+            }
+        }
+
         function showActionForm() {
             Office.context.ui.displayDialogAsync('https://ahmedalkaik.github.io/ow-control-tower/ActionDialog.html', { height: 75, width: 40, displayInIframe: true });
         }

@@ -372,105 +372,99 @@
     let livePollingInterval = null;
 
     Office.onReady(function(info) {
-        if (info.host === Office.HostType.Excel) {
-            initializeDropdowns();
-            startLivePolling();
-        }
+        startLivePolling();
+        
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'ow_feedback' && e.newValue) {
+                let fb = JSON.parse(e.newValue);
+                localStorage.removeItem('ow_feedback');
+                document.getElementById('loader').style.display = 'none';
+                
+                if (fb.type === 'ERROR') {
+                    document.getElementById('error-msg').innerText = "Submit Error: " + fb.msg;
+                    document.getElementById('app-body').style.display = 'block';
+                } else {
+                    currentRow = -1;
+                }
+            }
+        });
     });
 
     function startLivePolling() {
         if (!livePollingInterval) {
-            livePollingInterval = setInterval(refreshData, 2500);
+            livePollingInterval = setInterval(refreshData, 1500);
             refreshData();
         }
     }
 
-    async function refreshData() {
+    function refreshData() {
         if (document.getElementById('loader').style.display === 'block') return;
-        try {
-            await Excel.run(async (context) => {
-                const sheet = context.workbook.worksheets.getActiveWorksheet();
-                const activeCell = context.workbook.getActiveCell();
-                activeCell.load("rowIndex");
-                sheet.load("name");
-                await context.sync();
-
-                if (sheet.name !== CONFIG.sheetName) {
-                    renderContext({ error: "Please select a row in the " + CONFIG.sheetName + " sheet." });
-                    return;
-                }
-                const row = activeCell.rowIndex + 1; // 1-indexed for display
-                if (row < 2) {
-                    renderContext({ error: "Please select a valid data row (not header)." });
-                    return;
-                }
-
-                const range = sheet.getRangeByIndexes(row - 1, 0, 1, 36);
-                range.load("values");
-                await context.sync();
-
-                const data = range.values[0];
-                const state = data[CONFIG.cols.state] || "Initiated Order";
-                
-                const formatIfDate = (val) => {
-                    if (typeof val === 'number') {
-                        const d = new Date(Math.round((val - 25569) * 86400 * 1000));
-                        return d.toISOString().split('T')[0];
-                    }
-                    return val ? String(val) : "";
-                };
-
-                const ctx = {
-                    row: row,
-                    state: state,
-                    prNo: data[CONFIG.cols.prNo],
-                    poNo: data[CONFIG.cols.poNo],
-                    supplier: data[CONFIG.cols.supplier],
-                    blNo: data[CONFIG.cols.blNo],
-                    piNo: data[CONFIG.cols.piNo],
-                    delTerm: data[CONFIG.cols.delTerm],
-                    colorConfig: getStateColorConfig(state),
-                    rawObj: {
-                        company: formatIfDate(data[CONFIG.cols.company]),
-                        prNo: formatIfDate(data[CONFIG.cols.prNo]),
-                        prDate: formatIfDate(data[CONFIG.cols.prDate]),
-                        desc: formatIfDate(data[CONFIG.cols.desc]),
-                        qty: formatIfDate(data[CONFIG.cols.qty]),
-                        supplier: formatIfDate(data[CONFIG.cols.supplier]),
-                        piNo: formatIfDate(data[CONFIG.cols.piNo]),
-                        commInv: formatIfDate(data[CONFIG.cols.commInv]),
-                        poNo: formatIfDate(data[CONFIG.cols.poNo]),
-                        poIssDate: formatIfDate(data[CONFIG.cols.poIssDate]),
-                        fob: formatIfDate(data[CONFIG.cols.fob]),
-                        cif: formatIfDate(data[CONFIG.cols.cif]),
-                        value: formatIfDate(data[CONFIG.cols.value]),
-                        currency: formatIfDate(data[CONFIG.cols.currency]),
-                        payTerm: formatIfDate(data[CONFIG.cols.payTerm]),
-                        delTerm: formatIfDate(data[CONFIG.cols.delTerm]),
-                        poApprDate: formatIfDate(data[CONFIG.cols.poApprDate]),
-                        bank: formatIfDate(data[CONFIG.cols.bank]),
-                        bankDate: formatIfDate(data[CONFIG.cols.bankDate]),
-                        estReadiness: formatIfDate(data[CONFIG.cols.estReadiness]),
-                        reqDelDate: formatIfDate(data[CONFIG.cols.reqDelDate]),
-                        containers: formatIfDate(data[CONFIG.cols.containers]),
-                        containerType: formatIfDate(data[CONFIG.cols.containerType]),
-                        etd: formatIfDate(data[CONFIG.cols.etd]),
-                        eta: formatIfDate(data[CONFIG.cols.eta]),
-                        blNo: formatIfDate(data[CONFIG.cols.blNo]),
-                        acid: formatIfDate(data[CONFIG.cols.acid]),
-                        docArrival: formatIfDate(data[CONFIG.cols.docArrival]),
-                        shipRelease: formatIfDate(data[CONFIG.cols.shipRelease]),
-                        comments: formatIfDate(data[CONFIG.cols.comments]),
-                        vendorEmail: formatIfDate(data[CONFIG.cols.vendorEmail]),
-                        buyerEmail: formatIfDate(data[CONFIG.cols.buyerEmail]),
-                        leadTime: formatIfDate(data[CONFIG.cols.leadTime])
-                    }
-                };
-                renderContext(ctx);
-            });
-        } catch (error) {
-            onError(error);
+        
+        let ctxStr = localStorage.getItem('ow_ctx');
+        if (!ctxStr) return;
+        
+        let ctxRaw = JSON.parse(ctxStr);
+        if (ctxRaw.error) {
+            renderContext({ error: ctxRaw.error });
+            return;
         }
+        
+        const formatIfDate = (val) => {
+            if (typeof val === 'number') {
+                const d = new Date(Math.round((val - 25569) * 86400 * 1000));
+                return d.toISOString().split('T')[0];
+            }
+            return val ? String(val) : "";
+        };
+
+        const data = ctxRaw.raw;
+        let ctx = {
+            row: ctxRaw.row,
+            state: ctxRaw.state,
+            prNo: ctxRaw.prNo,
+            poNo: ctxRaw.poNo,
+            supplier: ctxRaw.supplier,
+            blNo: ctxRaw.blNo,
+            piNo: ctxRaw.piNo,
+            delTerm: ctxRaw.delTerm,
+            colorConfig: getStateColorConfig(ctxRaw.state),
+            rawObj: {
+                company: formatIfDate(data[0]),
+                prNo: formatIfDate(data[1]),
+                prDate: formatIfDate(data[2]),
+                desc: formatIfDate(data[3]),
+                qty: formatIfDate(data[4]),
+                supplier: formatIfDate(data[5]),
+                piNo: formatIfDate(data[6]),
+                commInv: formatIfDate(data[7]),
+                poNo: formatIfDate(data[8]),
+                poIssDate: formatIfDate(data[9]),
+                fob: formatIfDate(data[10]),
+                cif: formatIfDate(data[11]),
+                value: formatIfDate(data[12]),
+                currency: formatIfDate(data[13]),
+                payTerm: formatIfDate(data[14]),
+                delTerm: formatIfDate(data[15]),
+                poApprDate: formatIfDate(data[16]),
+                bank: formatIfDate(data[17]),
+                bankDate: formatIfDate(data[18]),
+                estReadiness: formatIfDate(data[19]),
+                reqDelDate: formatIfDate(data[21]),
+                containers: formatIfDate(data[23]),
+                containerType: formatIfDate(data[24]),
+                etd: formatIfDate(data[25]),
+                eta: formatIfDate(data[26]),
+                blNo: formatIfDate(data[27]),
+                acid: formatIfDate(data[28]),
+                docArrival: formatIfDate(data[29]),
+                shipRelease: formatIfDate(data[30]),
+                comments: formatIfDate(data[31]),
+                vendorEmail: formatIfDate(data[33]),
+                buyerEmail: formatIfDate(data[34]),
+                leadTime: formatIfDate(data[35])
+            }
+        };
+        renderContext(ctx);
     }
 
     function getStateColorConfig(state) {
@@ -612,22 +606,17 @@
         };
 
         let currentRank = phases[state] ? phases[state].rank : -1;
-
         for (let key in phases) {
             let phaseObj = phases[key];
             if (!phaseObj.el) continue;
-
             if (phaseObj.rank > currentRank) {
                 phaseObj.el.style.display = 'none';
                 continue;
             }
-
             const visibleGroups = Array.from(phaseObj.el.querySelectorAll('.form-group')).filter(el => el.style.display !== 'none');
-
             if (key === state) {
                 phaseObj.el.style.display = 'block';
                 if (isRowChange) phaseObj.el.open = true;
-
                 let compMsgId = 'comp-msg-' + phaseObj.rank;
                 let msgEl = document.getElementById(compMsgId);
                 if (!msgEl) {
@@ -641,7 +630,6 @@
                 if (msgEl) {
                     msgEl.style.display = (visibleGroups.length === 0) ? 'block' : 'none';
                 }
-
             } else if (visibleGroups.length > 0) {
                 phaseObj.el.style.display = 'block';
                 if (isRowChange) phaseObj.el.open = false;
@@ -710,157 +698,48 @@
         }
     }
 
-    async function submitData(targetState) {
+    function submitData(targetState) {
         document.getElementById('loader').style.display = 'block';
         document.getElementById('app-body').style.display = 'none';
 
         const mappings = {
-            'company': {id: 'v-company', col: CONFIG.cols.company}, 'prNo': {id: 'v-prNo', col: CONFIG.cols.prNo}, 'prDate': {id: 'v-prDate', col: CONFIG.cols.prDate},
-            'desc': {id: 'v-desc', col: CONFIG.cols.desc}, 'qty': {id: 'v-qty', col: CONFIG.cols.qty}, 'supplier': {id: 'v-supplier', col: CONFIG.cols.supplier},
-            'piNo': {id: 'v-piNo', col: CONFIG.cols.piNo}, 'commInv': {id: 'v-commInv', col: CONFIG.cols.commInv}, 'poNo': {id: 'v-poNo', col: CONFIG.cols.poNo},
-            'poIssDate': {id: 'v-poIssDate', col: CONFIG.cols.poIssDate}, 'fob': {id: 'v-fob', col: CONFIG.cols.fob}, 'cif': {id: 'v-cif', col: CONFIG.cols.cif},
-            'value': {id: 'v-value', col: CONFIG.cols.value}, 'currency': {id: 'v-currency', col: CONFIG.cols.currency}, 'payTerm': {id: 'v-payTerm', col: CONFIG.cols.payTerm},
-            'delTerm': {id: 'v-delTerm', col: CONFIG.cols.delTerm}, 'poApprDate': {id: 'v-poApprDate', col: CONFIG.cols.poApprDate}, 'bank': {id: 'v-bank', col: CONFIG.cols.bank},
-            'bankDate': {id: 'v-bankDate', col: CONFIG.cols.bankDate}, 'estReadiness': {id: 'v-estReadiness', col: CONFIG.cols.estReadiness},
-            'reqDelDate': {id: 'v-reqDelDate', col: CONFIG.cols.reqDelDate}, 'containers': {id: 'v-containers', col: CONFIG.cols.containers},
-            'containerType': {id: 'v-containerType', col: CONFIG.cols.containerType}, 'etd': {id: 'v-etd', col: CONFIG.cols.etd}, 'eta': {id: 'v-eta', col: CONFIG.cols.eta},
-            'blNo': {id: 'v-blNo', col: CONFIG.cols.blNo}, 'acid': {id: 'v-acid', col: CONFIG.cols.acid}, 'docArrival': {id: 'v-docArrival', col: CONFIG.cols.docArrival},
-            'shipRelease': {id: 'v-shipRelease', col: CONFIG.cols.shipRelease}, 'comments': {id: 'v-comments', col: CONFIG.cols.comments},
-            'vendorEmail': {id: 'v-vendorEmail', col: CONFIG.cols.vendorEmail}, 'buyerEmail': {id: 'v-buyerEmail', col: CONFIG.cols.buyerEmail}, 'leadTime': {id: 'v-leadTime', col: CONFIG.cols.leadTime}
+            'company': {id: 'v-company', col: 0}, 'prNo': {id: 'v-prNo', col: 1}, 'prDate': {id: 'v-prDate', col: 2},
+            'desc': {id: 'v-desc', col: 3}, 'qty': {id: 'v-qty', col: 4}, 'supplier': {id: 'v-supplier', col: 5},
+            'piNo': {id: 'v-piNo', col: 6}, 'commInv': {id: 'v-commInv', col: 7}, 'poNo': {id: 'v-poNo', col: 8},
+            'poIssDate': {id: 'v-poIssDate', col: 9}, 'fob': {id: 'v-fob', col: 10}, 'cif': {id: 'v-cif', col: 11},
+            'value': {id: 'v-value', col: 12}, 'currency': {id: 'v-currency', col: 13}, 'payTerm': {id: 'v-payTerm', col: 14},
+            'delTerm': {id: 'v-delTerm', col: 15}, 'poApprDate': {id: 'v-poApprDate', col: 16}, 'bank': {id: 'v-bank', col: 17},
+            'bankDate': {id: 'v-bankDate', col: 18}, 'estReadiness': {id: 'v-estReadiness', col: 19},
+            'reqDelDate': {id: 'v-reqDelDate', col: 21}, 'containers': {id: 'v-containers', col: 23},
+            'containerType': {id: 'v-containerType', col: 24}, 'etd': {id: 'v-etd', col: 25}, 'eta': {id: 'v-eta', col: 26},
+            'blNo': {id: 'v-blNo', col: 27}, 'acid': {id: 'v-acid', col: 28}, 'docArrival': {id: 'v-docArrival', col: 29},
+            'shipRelease': {id: 'v-shipRelease', col: 30}, 'comments': {id: 'v-comments', col: 31},
+            'vendorEmail': {id: 'v-vendorEmail', col: 33}, 'buyerEmail': {id: 'v-buyerEmail', col: 34}, 'leadTime': {id: 'v-leadTime', col: 35}
         };
 
-        try {
-            await Excel.run(async (context) => {
-                const sheet = context.workbook.worksheets.getActiveWorksheet();
-                let actualRow = currentRow - 1; // 0-indexed for api
-                
-                for (let key in mappings) {
-                    let map = mappings[key];
-                    let el = document.getElementById(map.id);
-                    if (el && el.classList.contains('dirty-input')) {
-                        let rangeCell = sheet.getCell(actualRow, map.col);
-                        rangeCell.values = [[el.value]];
-                    }
-                }
-                
-                if (targetState) {
-                    let rangeState = sheet.getCell(actualRow, CONFIG.cols.state);
-                    rangeState.values = [[targetState]];
-                    const rowRange = sheet.getRangeByIndexes(actualRow, 0, 1, 36);
-                    rowRange.format.fill.color = getStateColorConfig(targetState).bg;
-                }
-                
-                await context.sync();
-            });
-            
-            document.getElementById('loader').style.display = 'none';
-            currentRow = -1; // Force a full pull on next poll
-            refreshData();
-
-        } catch (error) {
-            onError(error);
-            document.getElementById('app-body').style.display = 'block';
+        let pushMaps = {};
+        for (let key in mappings) {
+            let map = mappings[key];
+            let el = document.getElementById(map.id);
+            if (el && el.classList.contains('dirty-input')) {
+                pushMaps[key] = { col: map.col, val: el.value };
+            }
         }
-    }
-
-    function onError(err) {
-        document.getElementById('loader').style.display = 'none';
         
-        let msg = typeof err === 'string' ? err : (err.message || 'An error occurred');
-        if (err instanceof OfficeExtension.Error) {
-             msg = err.code + ": " + err.message;
-        }
-
-        document.getElementById('error-msg').innerText = msg;
+        let payload = {
+            row: currentRow,
+            mappings: pushMaps,
+            targetState: targetState
+        };
+        
+        localStorage.setItem('ow_action', JSON.stringify({ type: 'SAVE', payload: payload }));
     }
 
-    async function archiveOrder() {
+    function archiveOrder() {
         if (!confirm("⚠️ Are you sure you want to Archive/Cancel this order?")) return;
-
         document.getElementById('loader').style.display = 'block';
         document.getElementById('app-body').style.display = 'none';
-        
-        try {
-            await Excel.run(async (context) => {
-                const sheet = context.workbook.worksheets.getActiveWorksheet();
-                let recycleSheet = context.workbook.worksheets.getItemOrNullObject("Recycle Bin");
-                await context.sync();
-
-                if (recycleSheet.isNullObject) {
-                    recycleSheet = context.workbook.worksheets.add("Recycle Bin");
-                    // Can't reliably copy headers easily in a single op, assume it gets made 
-                }
-                
-                let actualRow = currentRow - 1;
-                const srcRange = sheet.getRangeByIndexes(actualRow, 0, 1, 36);
-                srcRange.load("values");
-                await context.sync();
-                
-                const vals = srcRange.values;
-                vals[0][CONFIG.cols.state] = "Archived";
-                
-                const usedRange = recycleSheet.getUsedRangeOrNullObject();
-                usedRange.load("rowIndex, rowCount");
-                await context.sync();
-
-                let nextRow = usedRange.isNullObject ? 0 : usedRange.rowIndex + usedRange.rowCount;
-                const destRange = recycleSheet.getRangeByIndexes(nextRow, 0, 1, 36);
-                destRange.values = vals;
-                
-                srcRange.delete(Excel.DeleteShiftDirection.up);
-                await context.sync();
-            });
-
-            document.getElementById('loader').style.display = 'none';
-            currentRow = -1;
-            refreshData();
-
-        } catch (error) {
-            onError(error);
-            document.getElementById('app-body').style.display = 'block';
-        }
-    }
-
-    async function initializeDropdowns() {
-        try {
-            await Excel.run(async (context) => {
-                const sheet = context.workbook.worksheets.getItemOrNullObject("_Dropdowns");
-                await context.sync();
-                
-                if (sheet.isNullObject) return;
-                
-                const range = sheet.getUsedRange();
-                range.load("values");
-                await context.sync();
-                
-                let dropdowns = { currency: [], incoterm: [], bank: [], paymentTerm: [] };
-                let data = range.values;
-                if (data.length > 1) {
-                    for (let i = 1; i < data.length; i++) {
-                        if (data[i][0]) dropdowns.currency.push(String(data[i][0]).trim());
-                        if (data[i][1]) dropdowns.incoterm.push(String(data[i][1]).trim());
-                        if (data[i][2]) dropdowns.bank.push(String(data[i][2]).trim());
-                        if (data[i][3]) dropdowns.paymentTerm.push(String(data[i][3]).trim());
-                    }
-                }
-                
-                function fillSelect(id, values) {
-                    let el = document.getElementById(id);
-                    if (!el || !values) return;
-                    let html = '<option value="">-- Select --</option>';
-                    values.forEach(v => {
-                        html += `<option value="${v}">${v}</option>`;
-                    });
-                    el.innerHTML = html;
-                }
-                fillSelect('v-currency', dropdowns.currency);
-                fillSelect('v-delTerm', dropdowns.incoterm);
-                fillSelect('v-bank', dropdowns.bank);
-                fillSelect('v-payTerm', dropdowns.paymentTerm);
-            });
-        } catch(error) {
-            console.log("Dropdown load failed: " + error);
-        }
+        localStorage.setItem('ow_action', JSON.stringify({ type: 'ARCHIVE', row: currentRow }));
     }
 </script>
 </body>
