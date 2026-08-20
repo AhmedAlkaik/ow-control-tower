@@ -22,7 +22,7 @@
     <Host Name="Workbook" />
   </Hosts>
 
-  <!-- The Bridge: Full HTTPS File Route -->
+  <!-- The Bridge: Your Netlify/GitHub URL -->
   <DefaultSettings>
     <SourceLocation DefaultValue="https://ahmedalkaik.github.io/ow-control-tower/index.html" />
   </DefaultSettings>
