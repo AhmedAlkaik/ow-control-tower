@@ -2,6 +2,7 @@
 <html>
 
 <head>
+    <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
     <base target="_top">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
@@ -370,36 +371,31 @@
 
     <script>
         // Note: Update READ_FLOW_URL below once you have it from Power Automate
-        const READ_FLOW_URL = "https://default026147d2bad14ffe8ae1ec20d190d9.2a.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/29/workflows/a2f1fcee95724175b175c517dda13c9b/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=ZBcHG8Il6kHl_BLGacbnHJ5huisv9oA0yOQkJTrT6o4";
-        const WRITE_FLOW_URL = "https://default026147d2bad14ffe8ae1ec20d190d9.2a.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/27/workflows/878fcfc39ead4cd7b6d296fbecba2c6b/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=c_0sC3KjVtLEqkvIE-7hD_ELvDvybhpMWyB1cnLJ7tM";
-
+                
         let currentRow = -1;
         let currentState = "Initiated Order";
         let currentPoNo = "";
 
         let trackerCache = [];
 
-        window.addEventListener('DOMContentLoaded', () => {
+        Office.onReady((info) => {
             fetchTrackerData();
         });
 
         async function fetchTrackerData() {
             document.getElementById('loader').style.display = 'block';
             try {
-                const res = await fetch(READ_FLOW_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: "readAll" })
-                });
-
-                if (!res.ok) throw new Error("Failed to fetch data from Power Automate Endpoint");
-
-                const responseData = await res.json();
-                trackerCache = Array.isArray(responseData) ? responseData : (responseData.value || responseData.rows || []);
-
-
+                let ctxStr = localStorage.getItem('ow_ctx_db');
+                if (ctxStr) {
+                    let ctxObj = JSON.parse(ctxStr);
+                    trackerCache = ctxObj.raw || [];
+                    
+                    if (ctxObj.activeRowIdx !== -1 && ctxObj.activeRow) {
+                        processRowSelection(ctxObj.activeRowIdx, ctxObj.activeRow);
+                    }
+                }
             } catch (error) {
-                onError(error);
+                onError("Failed to read context dataset: " + error.message);
             }
             document.getElementById('loader').style.display = 'none';
         }
@@ -407,32 +403,31 @@
         function executeActionSearch() {
             const query = document.getElementById('action-search-input').value.toLowerCase().trim();
             const resultsDiv = document.getElementById('action-search-results');
-
+            
             if (!query) {
                 resultsDiv.style.display = 'none';
                 return;
             }
-
+            
             resultsDiv.innerHTML = '';
             let matches = 0;
-
+            
             for (let i = 1; i < trackerCache.length; i++) {
                 let row = trackerCache[i];
                 let pr = String(row[1] || "").toLowerCase();
                 let po = String(row[8] || "").toLowerCase();
                 let state = String(row[32] || "Initiated Order");
-
+                
                 if (state !== "Closed" && state !== "Archived") {
                     if (pr.includes(query) || po.includes(query)) {
                         matches++;
                         let btn = document.createElement('div');
                         btn.style = "padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px; cursor: pointer; font-size: 0.8rem; background: #fff;";
                         btn.innerHTML = `<div style="font-weight:bold; color:var(--primary);">${row[8] || "No PO"} | ${row[1] || "No PR"}</div><div style="font-size:0.7rem; color:#64748b; margin-top:3px;">${row[5] || "Unknown Supplier"} - <span style="color:var(--text); font-weight:bold; text-transform:uppercase;">${state}</span></div>`;
-
-                        // Over hover effect inline
+                        
                         btn.onmouseover = () => btn.style.backgroundColor = '#f1f5f9';
                         btn.onmouseout = () => btn.style.backgroundColor = '#fff';
-
+                        
                         btn.onclick = () => {
                             resultsDiv.style.display = 'none';
                             processRowSelection(i + 1, row);
@@ -441,11 +436,11 @@
                     }
                 }
             }
-
+            
             if (matches === 0) {
                 resultsDiv.innerHTML = '<div style="font-size: 0.8rem; color: #ef4444; padding: 5px;">No matching orders found.</div>';
             }
-
+            
             resultsDiv.style.display = 'flex';
         }
 
@@ -453,7 +448,7 @@
             document.getElementById('action-search-results').style.display = 'none';
             document.getElementById('action-search-input').value = "";
             currentPoNo = "";
-
+            
             let emptyData = new Array(36).fill("");
             processRowSelection(-1, emptyData);
         }
@@ -518,10 +513,11 @@
                     leadTime: formatIfDate(data[35])
                 }
             };
-
+            
             document.getElementById('ctx-header').style.display = 'flex';
             renderContext(ctx);
         }
+
 
         function getStateColorConfig(state) {
             if (state === "In Transit") return { bg: '#d0e3ff', border: '#3b82f6', text: '#1e3a8a' };
@@ -758,10 +754,11 @@
             executeSave(targetState);
         }
 
+
         async function executeSave(targetState = null) {
             currentPoNo = document.getElementById('v-poNo').value || currentPoNo;
             let currentPrNo = document.getElementById('v-prNo').value;
-
+            
             if (!currentPoNo && !currentPrNo) {
                 onError("Missing Identifier. Please enter a PR Number or PO Number to create a record.");
                 return;
@@ -781,7 +778,6 @@
             dirtyInputs.forEach(el => {
                 if (el.id && el.id.startsWith('v-')) {
                     let key = el.id.substring(2);
-                    // Strip 'urgent-' prefix so Power Automate recognizes the mapping
                     if (key.startsWith('urgent-')) {
                         key = key.substring(7);
                     }
@@ -790,40 +786,20 @@
             });
 
             try {
-                const res = await fetch(WRITE_FLOW_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                if (!res.ok) throw new Error("Network response was not OK");
-
+                Office.context.ui.messageParent(JSON.stringify(payload));
                 document.getElementById('loader').style.display = 'none';
-                document.getElementById('error-msg').style.color = "var(--success)";
-                document.getElementById('error-msg').innerText = "✅ Successfully Saved via Power Automate!";
-
-                // Close dialog after 1.5 seconds if opened as a popup Window
-                setTimeout(() => { if (window.opener) window.close(); }, 1500);
-
-                // Wipe dirty state after successful save
-                document.querySelectorAll('.dirty-input').forEach(el => el.classList.remove('dirty-input'));
-
-                if (targetState) {
-                    currentState = targetState;
-                    renderContext({ state: targetState, poNo: currentPoNo, row: currentRow, rawObj: {} });
-                }
             } catch (error) {
-                onError("Flow Error: " + error.message);
+                onError("Office IPC Error: " + error.message);
             }
         }
 
         async function archiveOrder() {
             if (!confirm("⚠️ Are you sure you want to Archive/Cancel this order?")) return;
-            // Uses standard saving logic to update state to Archived
-            executeSave("Archived");
+            Office.context.ui.messageParent(JSON.stringify({ action: "archive", poNo: currentPoNo, prNo: document.getElementById('v-prNo').value }));
         }
 
         function onError(err) {
+
             document.getElementById('loader').style.display = 'none';
             let msg = typeof err === 'string' ? err : (err.message || 'An error occurred');
             let errorEl = document.getElementById('error-msg');

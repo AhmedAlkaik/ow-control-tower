@@ -2,6 +2,7 @@
 <html>
 
 <head>
+    <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
     <base target="_top">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
@@ -359,295 +360,370 @@
         </div>
 
         <script>
-            const READ_FLOW_URL = "https://default026147d2bad14ffe8ae1ec20d190d9.2a.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/29/workflows/a2f1fcee95724175b175c517dda13c9b/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=ZBcHG8Il6kHl_BLGacbnHJ5huisv9oA0yOQkJTrT6o4";
-            const WRITE_FLOW_URL = "YOUR_WRITE_FLOW_URL_HERE";
+                        
+    
+        let currentBuyerFilter = "ALL";
+        let trackerDataset = [];
+        let dialog = null;
 
-            let currentBuyerFilter = "ALL";
-            let trackerDataset = [];
+        Office.onReady((info) => {
+            initApp();
+        });
 
-            window.addEventListener('DOMContentLoaded', () => {
-                initApp();
-                setInterval(() => {
-                    if (document.getElementById('kpi-panel').style.display !== 'none') {
-                        fetchTrackerData(true);
+        async function initApp() {
+            showLoading(true);
+            try {
+                await Excel.run(async (context) => {
+                    const sheet = context.workbook.worksheets.getItemOrNullObject("Tracker");
+                    await context.sync();
+                    
+                    if (sheet.isNullObject) {
+                        showLoading(false);
+                        document.getElementById('error-msg').innerText = "Tracker sheet not found.";
+                        return;
                     }
-                }, 10000);
-            });
 
-            async function fetchTrackerData(silent = false) {
-                if (!silent) showLoading(true);
-                try {
-                    const res = await fetch(READ_FLOW_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ action: "readAll" })
-                    });
+                    const usedRange = sheet.getUsedRange();
+                    usedRange.load("values");
+                    await context.sync();
 
-                    if (!res.ok) throw new Error("Network response was not OK.");
+                    trackerDataset = usedRange.values;
+                    
+                    let buyers = [];
+                    if (trackerDataset.length > 1) {
+                        for (let i = 1; i < trackerDataset.length; i++) {
+                            let b = trackerDataset[i][34];
+                            if (b && String(b).trim() !== "") {
+                                buyers.push(String(b).trim());
+                            }
+                        }
+                    }
+                    buyers = [...new Set(buyers)].sort();
 
-                    const responseData = await res.json();
-                    trackerDataset = Array.isArray(responseData) ? responseData : (responseData.value || responseData.rows || []);
+                    const select = document.getElementById('buyer-select');
+                    select.innerHTML = '<option value="ALL">🌎 All Buyers</option>';
+                    
+                    if (buyers.length > 0) {
+                        buyers.forEach(b => {
+                            let opt = document.createElement('option');
+                            opt.value = String(b);
+                            opt.text = "👤 " + String(b).split("@")[0];
+                            select.appendChild(opt);
+                        });
+                    }
 
+                    currentBuyerFilter = select.value;
+                    loadKPIsFromMemory(trackerDataset, false);
+                });
+            } catch (error) {
+                onError(error);
+            }
+        }
+
+        async function fetchTrackerData(silent = false) {
+            if (!silent) showLoading(true);
+            try {
+                await Excel.run(async (context) => {
+                    const sheet = context.workbook.worksheets.getItem("Tracker");
+                    const usedRange = sheet.getUsedRange();
+                    usedRange.load("values");
+                    await context.sync();
+                    trackerDataset = usedRange.values;
                     loadKPIsFromMemory(trackerDataset, silent);
+                });
+            } catch (error) {
+                if (!silent) onError(error);
+            }
+        }
 
-                } catch (error) {
-                    if (!silent) onError(error);
+        function loadKPIsFromMemory(data, silent) {
+            let counts = {
+                "Initiated Order": 0,
+                "In Production": 0,
+                "In Transit": 0,
+                "Under Clearance": 0,
+                "Completed": 0,
+                "TOTAL_ACTIVE": 0
+            };
+            
+            if (data && data.length > 1) {
+                for (let i = 1; i < data.length; i++) {
+                    let state = data[i][32] || "Initiated Order";
+                    let buyer = data[i][34];
+                    
+                    if (currentBuyerFilter && currentBuyerFilter !== "ALL" && String(buyer) !== currentBuyerFilter) continue;
+                    
+                    if (state && state !== "Archived" && state !== "Closed") {
+                        counts["TOTAL_ACTIVE"]++;
+                    }
+                    if (counts[state] !== undefined) counts[state]++;
                 }
             }
+            
+            if (!silent) showLoading(false);
+            document.getElementById('kpi-total').innerText = counts["TOTAL_ACTIVE"] || 0;
+            document.getElementById('kpi-req').innerText = counts["Initiated Order"] || 0;
+            document.getElementById('kpi-prod').innerText = counts["In Production"] || 0;
+            document.getElementById('kpi-trans').innerText = counts["In Transit"] || 0;
+            document.getElementById('kpi-clear').innerText = counts["Under Clearance"] || 0;
+            document.getElementById('kpi-comp').innerText = counts["Completed"] || 0;
+        }
 
-            function loadKPIsFromMemory(data, silent) {
-                let counts = {
-                    "Initiated Order": 0,
-                    "In Production": 0,
-                    "In Transit": 0,
-                    "Under Clearance": 0,
-                    "Completed": 0,
-                    "TOTAL_ACTIVE": 0
-                };
+        function handleBuyerChange() {
+            currentBuyerFilter = document.getElementById('buyer-select').value;
+            loadKPIsFromMemory(trackerDataset, false);
+        }
 
-                if (data.length > 0) {
-                    for (let i = 0; i < data.length; i++) {
-                        let state = data[i][32] || "Initiated Order";
-                        let buyer = data[i][34];
+        function openFilteredGrid() {
+            const baseSpreadsheetUrl = "https://docs.google.com/spreadsheets/d/1wnI1U98GqL0fYNlv5PKCQ7yMp1zfUPFfQ8UE_0d9T5A/edit#gid=313093570";
+            window.open(baseSpreadsheetUrl, "_blank");
+        }
 
-                        if (currentBuyerFilter && currentBuyerFilter !== "ALL" && String(buyer) !== currentBuyerFilter) continue;
+        function getStateColorConfig(state) {
+            if (state === "In Transit") return { bg: '#d0e3ff', border: '#3b82f6', text: '#1e3a8a' };
+            if (state === "Under Clearance") return { bg: '#fef7e0', border: '#f59e0b', text: '#78350f' };
+            if (state === "Completed") return { bg: '#bdf4cb', border: '#10b981', text: '#064e3b' };
+            if (state === "Initiated Order") return { bg: '#f3e8ff', border: '#8b5cf6', text: '#4c1d95' };
+            if (state === "Archived") return { bg: '#f1f5f9', border: '#94a3b8', text: '#475569' };
+            return { bg: '#ffffff', border: '#fbbf24', text: '#92400e' };
+        }
 
-                        if (state && state !== "Archived" && state !== "Closed") {
-                            counts["TOTAL_ACTIVE"]++;
-                        }
-                        if (counts[state] !== undefined) counts[state]++;
+        async function executeSearch(query) {
+            if (!query || query.trim() === '') return closeResults();
+            showLoading(true);
+            
+            try {
+                let data = trackerDataset; 
+                let results = [];
+                let safeQuery = query.toLowerCase().trim();
+                
+                for (let i = 1; i < data.length; i++) {
+                    let row = data[i];
+                    let state = row[32] || "Initiated Order";
+                    let buyer = row[34];
+                    if (currentBuyerFilter && currentBuyerFilter !== "ALL" && String(buyer) !== currentBuyerFilter) continue;
+                    
+                    let rowText = row.join("|").toLowerCase();
+                    if (rowText.includes(safeQuery)) {
+                        results.push({
+                            rowIdx: i + 1,
+                            state: state || "PENDING",
+                            po: row[8] || "No PO",
+                            pr: row[1] || "No PR",
+                            supplier: row[5] || "TBD Vendor",
+                            piNo: row[6] || "",
+                            blNo: row[27] || "",
+                            delTerm: row[15] || "",
+                            raw: row,
+                            colors: getStateColorConfig(state)
+                        });
+                        if (results.length > 99) break;
                     }
                 }
-
-                if (!silent) showLoading(false);
-                document.getElementById('kpi-total').innerText = counts["TOTAL_ACTIVE"] || 0;
-                document.getElementById('kpi-req').innerText = counts["Initiated Order"] || 0;
-                document.getElementById('kpi-prod').innerText = counts["In Production"] || 0;
-                document.getElementById('kpi-trans').innerText = counts["In Transit"] || 0;
-                document.getElementById('kpi-clear').innerText = counts["Under Clearance"] || 0;
-                document.getElementById('kpi-comp').innerText = counts["Completed"] || 0;
+                renderResults(results);
+            } catch(error) {
+                onError(error);
             }
+        }
 
-            function initApp() {
-                showLoading(true);
-
-                // Dummy initial buyers logic until Flow gives data
-                let buyers = ["ahmed@orientalweavers.com", "hossam@orientalweavers.com"];
-
-                let currentUser = "ALL";
-                const appData = { buyers: buyers, currentUser: currentUser };
-
-                const select = document.getElementById('buyer-select');
-
-                if (appData.buyers && appData.buyers.length > 0) {
-                    appData.buyers.forEach(b => {
-                        let opt = document.createElement('option');
-                        opt.value = String(b);
-                        opt.text = "👤 " + String(b).split("@")[0];
-                        select.appendChild(opt);
-                    });
-                } else {
-                    let opt = document.createElement('option');
-                    opt.value = "NONE";
-                    opt.text = "⚠️ Type Emails in Col 36";
-                    select.appendChild(opt);
-                }
-
-                select.value = appData.currentUser;
-                currentBuyerFilter = select.value;
-
-                handleBuyerChange();
-                fetchTrackerData(false);
-            }
-
-            function handleBuyerChange() {
-                currentBuyerFilter = document.getElementById('buyer-select').value;
-                fetchTrackerData(false);
-            }
-
-            function openFilteredGrid() {
-                const baseSpreadsheetUrl = "https://docs.google.com/spreadsheets/d/1wnI1U98GqL0fYNlv5PKCQ7yMp1zfUPFfQ8UE_0d9T5A/edit#gid=313093570";
-                const fvidMap = {
-                    "ALL": "",
-                    "ahmedalkaik04": "310711223",
-                    "ghaidaa.120240050": "2044244065"
-                };
-
-                let fvid = "";
-                let lowerFilter = currentBuyerFilter.toLowerCase();
-                for (const [key, value] of Object.entries(fvidMap)) {
-                    if (key === "ALL") continue;
-                    if (lowerFilter.includes(key.toLowerCase())) {
-                        fvid = value;
-                        break;
+        async function applyFilter(stateFilter) {
+            document.getElementById('global-search').value = '';
+            showLoading(true);
+            try {
+                let data = trackerDataset;
+                let results = [];
+                for (let i = 1; i < data.length; i++) {
+                    let row = data[i];
+                    let state = row[32] || "Initiated Order";
+                    let buyer = row[34];
+                    if (currentBuyerFilter && currentBuyerFilter !== "ALL" && String(buyer) !== currentBuyerFilter) continue;
+                    
+                    let match = false;
+                    if (stateFilter === "ALL" && state !== "Archived" && state !== "Closed" && state) {
+                        match = true;
+                    } else if (state === stateFilter) {
+                        match = true;
+                    }
+                    
+                    if (match) {
+                        results.push({
+                            rowIdx: i + 1,
+                            state: state || "PENDING",
+                            po: row[8] || "No PO",
+                            pr: row[1] || "No PR",
+                            supplier: row[5] || "TBD Vendor",
+                            piNo: row[6] || "",
+                            blNo: row[27] || "",
+                            delTerm: row[15] || "",
+                            raw: row,
+                            colors: getStateColorConfig(state)
+                        });
+                        if (results.length > 99) break;
                     }
                 }
-                const finalUrl = baseSpreadsheetUrl + (fvid ? ("&fvid=" + fvid) : "");
-                window.open(finalUrl, "_blank");
+                renderResults(results);
+            } catch(error) {
+                onError(error);
             }
+        }
 
-            function getStateColorConfig(state) {
-                if (state === "In Transit") return { bg: '#d0e3ff', border: '#3b82f6', text: '#1e3a8a' };
-                if (state === "Under Clearance") return { bg: '#fef7e0', border: '#f59e0b', text: '#78350f' };
-                if (state === "Completed") return { bg: '#bdf4cb', border: '#10b981', text: '#064e3b' };
-                if (state === "Initiated Order") return { bg: '#f3e8ff', border: '#8b5cf6', text: '#4c1d95' };
-                if (state === "Archived") return { bg: '#f1f5f9', border: '#94a3b8', text: '#475569' };
-                return { bg: '#ffffff', border: '#fbbf24', text: '#92400e' };
-            }
+        function renderResults(res) {
+            showLoading(false);
+            document.getElementById('kpi-panel').style.display = 'none';
+            document.getElementById('results-panel').style.display = 'block';
 
-            async function executeSearch(query) {
-                if (!query || query.trim() === '') return closeResults();
-                showLoading(true);
+            const list = document.getElementById('results-list');
+            list.innerHTML = '';
 
-                try {
-                    let data = trackerDataset;
-                    let results = [];
-                    let safeQuery = query.toLowerCase().trim();
+            if (res.length === 0) {
+                list.innerHTML = '<p style="font-size:0.8rem; color:var(--text-muted);">No matching rows found.</p>';
+            } else {
+                res.forEach(item => {
+                    let div = document.createElement('div');
+                    let bg = item.colors ? item.colors.bg : 'white';
+                    let border = item.colors ? item.colors.border : '#e2e8f0';
+                    let text = item.colors ? item.colors.text : '#00205b';
 
-                    for (let i = 0; i < data.length; i++) {
-                        let row = data[i];
-                        let state = row[32] || "Initiated Order";
-                        let buyer = row[34];
-                        if (currentBuyerFilter && currentBuyerFilter !== "ALL" && String(buyer) !== currentBuyerFilter) continue;
+                    div.style = `background: linear-gradient(to right, ${bg}, #ffffff 15%); border-left: 4px solid ${border}; border-top: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; border-radius: 6px; padding: 10px; margin-bottom: 8px; cursor: pointer;`;
 
-                        let rowText = row.join("|").toLowerCase();
-                        if (rowText.includes(safeQuery)) {
-                            results.push({
-                                rowIdx: i + 1,
-                                state: state || "PENDING",
-                                po: row[8] || "No PO",
-                                pr: row[1] || "No PR",
-                                supplier: row[5] || "TBD Vendor",
-                                piNo: row[6] || "",
-                                blNo: row[27] || "",
-                                delTerm: row[15] || "",
-                                raw: row,
-                                colors: getStateColorConfig(state)
-                            });
-                            if (results.length > 99) break;
-                        }
-                    }
-                    renderResults(results);
-                } catch (error) {
-                    onError(error);
-                }
-            }
+                    // Hydrate local storage with the entire dataset so the dialog can do search!
+                    div.onclick = function () {
+                        localStorage.setItem('ow_ctx_db', JSON.stringify({ raw: trackerDataset, activeRowIdx: item.rowIdx, activeRow: item.raw }));
+                        showActionForm();
+                    };
 
-            async function applyFilter(stateFilter) {
-                document.getElementById('global-search').value = '';
-                showLoading(true);
-                try {
-                    let data = trackerDataset;
-                    let results = [];
-                    for (let i = 0; i < data.length; i++) {
-                        let row = data[i];
-                        let state = row[32] || "Initiated Order";
-                        let buyer = row[34];
-                        if (currentBuyerFilter && currentBuyerFilter !== "ALL" && String(buyer) !== currentBuyerFilter) continue;
+                    let subInfo = [];
+                    if (item.piNo) subInfo.push("PI: " + item.piNo);
+                    if (item.blNo) subInfo.push("BL: " + item.blNo);
+                    if (item.delTerm) subInfo.push("Term: " + item.delTerm);
 
-                        let match = false;
-                        if (stateFilter === "ALL" && state !== "Archived" && state !== "Closed" && state) {
-                            match = true;
-                        } else if (state === stateFilter) {
-                            match = true;
-                        }
-
-                        if (match) {
-                            results.push({
-                                rowIdx: i + 1,
-                                state: state || "PENDING",
-                                po: row[8] || "No PO",
-                                pr: row[1] || "No PR",
-                                supplier: row[5] || "TBD Vendor",
-                                piNo: row[6] || "",
-                                blNo: row[27] || "",
-                                delTerm: row[15] || "",
-                                raw: row,
-                                colors: getStateColorConfig(state)
-                            });
-                            if (results.length > 99) break;
-                        }
-                    }
-                    renderResults(results);
-                } catch (error) {
-                    onError(error);
-                }
-            }
-
-            function renderResults(res) {
-                showLoading(false);
-                document.getElementById('kpi-panel').style.display = 'none';
-                document.getElementById('results-panel').style.display = 'block';
-
-                const list = document.getElementById('results-list');
-                list.innerHTML = '';
-
-                if (res.length === 0) {
-                    list.innerHTML = '<p style="font-size:0.8rem; color:var(--text-muted);">No matching rows found.</p>';
-                } else {
-                    res.forEach(item => {
-                        let div = document.createElement('div');
-
-                        let bg = item.colors ? item.colors.bg : 'white';
-                        let border = item.colors ? item.colors.border : '#e2e8f0';
-                        let text = item.colors ? item.colors.text : '#00205b';
-
-                        div.style = `background: linear-gradient(to right, ${bg}, #ffffff 15%); border-left: 4px solid ${border}; border-top: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; border-radius: 6px; padding: 10px; margin-bottom: 8px; cursor: pointer;`;
-
-                        // When a row is clicked, push the data to localStorage so ActionDialog can read it standalone
-                        div.onclick = function () {
-                            const obj = {
-                                row: item.rowIdx,
-                                state: item.state,
-                                supplier: item.supplier,
-                                prNo: item.pr,
-                                poNo: item.po,
-                                piNo: item.piNo,
-                                blNo: item.blNo,
-                                delTerm: item.delTerm,
-                                raw: item.raw
-                            };
-                            localStorage.setItem('ow_ctx', JSON.stringify(obj));
-                            showActionForm();
-                        };
-
-                        let subInfo = [];
-                        if (item.piNo) subInfo.push("PI: " + item.piNo);
-                        if (item.blNo) subInfo.push("BL: " + item.blNo);
-                        if (item.delTerm) subInfo.push("Term: " + item.delTerm);
-
-                        div.innerHTML = `<div style="font-weight:700; color:var(--primary); font-size:0.9rem;">${item.pr} | ${item.po}</div>
+                    div.innerHTML = `<div style="font-weight:700; color:var(--primary); font-size:0.9rem;">${item.pr} | ${item.po}</div>
                                      <div style="font-size:0.75rem; color:#64748b; margin-top:3px;">${item.supplier}</div>
                                      ${subInfo.length > 0 ? `<div style="font-size:0.70rem; color:var(--text-muted); margin-top:2px;">${subInfo.join(" | ")}</div>` : ''}
                                      <div style="font-size:0.75rem; font-weight:700; color:${text}; margin-top:4px; text-transform: uppercase;">${item.state}</div>`;
-                        list.appendChild(div);
-                    });
+                    list.appendChild(div);
+                });
+            }
+        }
+
+        function closeResults() {
+            document.getElementById('global-search').value = '';
+            document.getElementById('results-panel').style.display = 'none';
+            document.getElementById('kpi-panel').style.display = 'grid';
+            fetchTrackerData(true);
+        }
+
+        function showActionForm() {
+            // Hydrate DB if clicking New without a row clicked
+            localStorage.setItem('ow_ctx_db', JSON.stringify({ raw: trackerDataset, activeRowIdx: -1, activeRow: [] }));
+            
+            Office.context.ui.displayDialogAsync('https://ahmedalkaik.github.io/ow-control-tower/ActionDialog.html', { height: 75, width: 40, displayInIframe: true },
+                function (asyncResult) {
+                    if (asyncResult.status === Office.AsyncResultStatus.Failed) {
+                        onError("Dialog Error: " + asyncResult.error.message);
+                        return;
+                    }
+                    dialog = asyncResult.value;
+                    dialog.addEventHandler(Office.EventType.DialogMessageReceived, processMessage);
                 }
-            }
+            );
+        }
 
-            function closeResults() {
-                document.getElementById('global-search').value = '';
-                document.getElementById('results-panel').style.display = 'none';
-                document.getElementById('kpi-panel').style.display = 'grid';
-                fetchTrackerData(true);
-            }
+        async function processMessage(arg) {
+            let payloadStr = arg.message;
+            if (!payloadStr) return;
+            
+            showLoading(true);
+            try {
+                let payload = JSON.parse(payloadStr);
 
-            function showActionForm() {
-                window.open('https://ahmedalkaik.github.io/ow-control-tower/ActionDialog.html', 'ActionForm', 'width=450,height=800,scrollbars=yes');
-            }
+                await Excel.run(async (context) => {
+                    const sheet = context.workbook.worksheets.getItem("Tracker");
+                    
+                    const mappings = {
+                        'company': 0, 'prNo': 1, 'prDate': 2, 'desc': 3, 'qty': 4,
+                        'supplier': 5, 'piNo': 6, 'commInv': 7, 'poNo': 8, 'poIssDate': 9,
+                        'fob': 10, 'cif': 11, 'value': 12, 'currency': 13, 'payTerm': 14, 
+                        'delTerm': 15, 'poApprDate': 16, 'bank': 17, 'bankDate': 18, 
+                        'estReadiness': 19, 'reqDelDate': 21, 'containers': 23, 
+                        'containerType': 24, 'etd': 25, 'eta': 26, 'blNo': 27, 
+                        'acid': 28, 'docArrival': 29, 'shipRelease': 30, 'comments': 31,
+                        'state': 32, 'vendorEmail': 33, 'buyerEmail': 34, 'leadTime': 35
+                    };
 
-            function showLoading(show) {
-                const l = document.getElementById('loader');
-                if (l) l.style.display = show ? 'block' : 'none';
-            }
-            function onError(err) {
+                    let targetRowIdx = -1;
+                    
+                    if (payload.action === 'create') {
+                        // Find first empty row by rowCount
+                        const usedRange = sheet.getUsedRange();
+                        usedRange.load("rowCount");
+                        await context.sync();
+                        targetRowIdx = usedRange.rowCount;
+                    } else {
+                        // Find matching poNo or prNo
+                        const usedRange = sheet.getUsedRange();
+                        usedRange.load("values");
+                        await context.sync();
+                        
+                        let data = usedRange.values;
+                        for (let i = 1; i < data.length; i++) {
+                            if (payload.poNo && String(data[i][8]) === String(payload.poNo)) {
+                                targetRowIdx = i;
+                                break;
+                            }
+                            if (!payload.poNo && payload.prNo && String(data[i][1]) === String(payload.prNo)) {
+                                targetRowIdx = i;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (targetRowIdx === -1) {
+                        throw new Error("Could not find or create target row.");
+                    }
+                    
+                    let targetRange = sheet.getRangeByIndexes(targetRowIdx, 0, 1, 36);
+                    targetRange.load("values");
+                    await context.sync();
+                    
+                    let newValues = targetRange.values;
+                    
+                    for (let key in payload) {
+                        if (mappings[key] !== undefined) {
+                            newValues[0][mappings[key]] = payload[key] || "";
+                        }
+                    }
+                    if (payload.targetState) {
+                        newValues[0][32] = payload.targetState; 
+                    }
+                    if (payload.action === 'archive') {
+                        newValues[0][32] = "Archived";
+                    }
+
+                    targetRange.values = newValues;
+                    await context.sync();
+                });
+                
                 showLoading(false);
-                const e = document.getElementById('error-msg');
-                let msg = typeof err === 'string' ? err : (err.message || 'An error occurred');
-                if (e) e.innerText = msg;
+                if (dialog) dialog.close();
+                fetchTrackerData(true); // reload memory
+            } catch (err) {
+                onError("Failed to execute Excel update: " + err.message);
             }
-        </script>
-    </div>
+        }
+
+        function showLoading(show) {
+            const l = document.getElementById('loader');
+            if (l) l.style.display = show ? 'block' : 'none';
+        }
+        function onError(err) {
+            showLoading(false);
+            const e = document.getElementById('error-msg');
+            let msg = typeof err === 'string' ? err : (err.message || 'An error occurred');
+            if (e) e.innerText = msg;
+        }
+    </script>
 </body>
+
 
 </html>
