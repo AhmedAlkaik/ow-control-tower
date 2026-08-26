@@ -19,16 +19,9 @@
             /* Metallic Gold */
         }
 
-        body {
-            font-family: 'Outfit', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text);
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-        }
+        body { font-family: 'Outfit', sans-serif; background-color: #e2e8f0; color: var(--text); margin: 0; padding: 0; display: flex; justify-content: center; }
+        .main-container { background-color: var(--bg-color); max-width: 900px; width: 100%; min-height: 100vh; padding: 30px; box-sizing: border-box; display: flex; flex-direction: column; gap: 1.5rem; box-shadow: 0 0 25px rgba(0,0,0,0.05); }
+        .ow-logo { max-height: 50px; margin-right: 15px; object-fit: contain; }
 
         h3 {
             margin: 0;
@@ -245,12 +238,14 @@
 </head>
 
 <body>
-
+    <div class="main-container">
     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
-        <div>
-            <h3>Control Tower</h3>
-            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 5px;">Contextual automation for
-                procurement.</p>
+        <div style="display: flex; align-items: center;">
+            <img src="https://upload.wikimedia.org/wikipedia/en/thumb/4/43/Oriental_Weavers_logo.svg/1200px-Oriental_Weavers_logo.svg.png" alt="Oriental Weavers Logo" class="ow-logo">
+            <div>
+                <h3>Control Tower</h3>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 5px;">Contextual automation for procurement.</p>
+            </div>
         </div>
         <div style="text-align: right;">
             <select id="buyer-select"
@@ -624,6 +619,7 @@
             if (e) e.innerText = msg;
         }
     </script>
+    </div>
 </body>
 
 </html>
