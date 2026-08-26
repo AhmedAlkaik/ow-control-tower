@@ -343,7 +343,6 @@
             <input type="text" id="v-comments">
         </div>
 
-
         <div class="flex-row" style="margin-top: 15px;">
             <button class="btn secondary" onclick="submitData(false)">💾 Save Fields Temporarily</button>
             <button class="btn success" id="btn-advance" onclick="handleAdvanceClick()">🚀 Advance Phase</button>
@@ -353,427 +352,394 @@
     </div>
 
     <script>
-    const READ_FLOW_URL = "YOUR_READ_FLOW_URL_HERE";
-    const WRITE_FLOW_URL = "YOUR_WRITE_FLOW_URL_HERE";
+        // Note: Update READ_FLOW_URL below once you have it from Power Automate
+        const READ_FLOW_URL = "https://default026147d2bad14ffe8ae1ec20d190d9.2a.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/29/workflows/a2f1fcee95724175b175c517dda13c9b/triggers/manual/paths/invoke?api-version=1";
+        const WRITE_FLOW_URL = "https://default026147d2bad14ffe8ae1ec20d190d9.2a.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/27/workflows/878fcfc39ead4cd7b6d296fbecba2c6b/triggers/manual/paths/invoke?api-version=1";
 
-    const CONFIG = {
-        sheetName: "Tracker",
-        cols: {
-            company: 0, prNo: 1, prDate: 2, desc: 3, qty: 4,
-            supplier: 5, piNo: 6, commInv: 7, poNo: 8, poIssDate: 9,
-            fob: 10, cif: 11, value: 12, currency: 13, payTerm: 14, delTerm: 15,
-            poApprDate: 16, bank: 17, bankDate: 18, estReadiness: 19, suppConf: 20,
-            reqDelDate: 21, shipReqDate: 22, containers: 23, containerType: 24, etd: 25,
-            eta: 26, blNo: 27, acid: 28, docArrival: 29, shipRelease: 30, comments: 31,
-            state: 32, vendorEmail: 33, buyerEmail: 34, leadTime: 35
-        }
-    };
+        let currentRow = -1;
+        let currentState = "Initiated Order";
+        let currentPoNo = "";
 
-    let currentRow = -1;
-    let currentState = "Initiated Order";
-    let currentPoNo = "";
+        window.addEventListener('DOMContentLoaded', () => {
+            refreshData();
+        });
 
-    window.addEventListener('DOMContentLoaded', () => {
-        refreshData();
-    });
+        function refreshData() {
+            if (document.getElementById('loader').style.display === 'block') return;
 
-    function refreshData() {
-        if (document.getElementById('loader').style.display === 'block') return;
-        
-        let ctxStr = localStorage.getItem('ow_ctx');
-        if (!ctxStr) return;
-        
-        let ctxRaw = JSON.parse(ctxStr);
-        if (ctxRaw.error) {
-            renderContext({ error: ctxRaw.error });
-            return;
-        }
-        
-        const formatIfDate = (val) => {
-            if (typeof val === 'number') {
-                const d = new Date(Math.round((val - 25569) * 86400 * 1000));
-                return d.toISOString().split('T')[0];
+            let ctxStr = localStorage.getItem('ow_ctx');
+            if (!ctxStr) return;
+
+            let ctxRaw = JSON.parse(ctxStr);
+            if (ctxRaw.error) {
+                renderContext({ error: ctxRaw.error });
+                return;
             }
-            return val ? String(val) : "";
-        };
 
-        const data = ctxRaw.raw || [];
-        currentPoNo = ctxRaw.poNo || formatIfDate(data[8]) || "";
+            const formatIfDate = (val) => {
+                if (typeof val === 'number') {
+                    const d = new Date(Math.round((val - 25569) * 86400 * 1000));
+                    return d.toISOString().split('T')[0];
+                }
+                return val ? String(val) : "";
+            };
 
-        let ctx = {
-            row: ctxRaw.row,
-            state: ctxRaw.state,
-            prNo: ctxRaw.prNo,
-            poNo: currentPoNo,
-            supplier: ctxRaw.supplier,
-            blNo: ctxRaw.blNo,
-            piNo: ctxRaw.piNo,
-            delTerm: ctxRaw.delTerm,
-            colorConfig: getStateColorConfig(ctxRaw.state),
-            rawObj: {
-                company: formatIfDate(data[0]),
-                prNo: formatIfDate(data[1]),
-                prDate: formatIfDate(data[2]),
-                desc: formatIfDate(data[3]),
-                qty: formatIfDate(data[4]),
-                supplier: formatIfDate(data[5]),
-                piNo: formatIfDate(data[6]),
-                commInv: formatIfDate(data[7]),
-                poNo: formatIfDate(data[8]),
-                poIssDate: formatIfDate(data[9]),
-                fob: formatIfDate(data[10]),
-                cif: formatIfDate(data[11]),
-                value: formatIfDate(data[12]),
-                currency: formatIfDate(data[13]),
-                payTerm: formatIfDate(data[14]),
-                delTerm: formatIfDate(data[15]),
-                poApprDate: formatIfDate(data[16]),
-                bank: formatIfDate(data[17]),
-                bankDate: formatIfDate(data[18]),
-                estReadiness: formatIfDate(data[19]),
-                reqDelDate: formatIfDate(data[21]),
-                containers: formatIfDate(data[23]),
-                containerType: formatIfDate(data[24]),
-                etd: formatIfDate(data[25]),
-                eta: formatIfDate(data[26]),
-                blNo: formatIfDate(data[27]),
-                acid: formatIfDate(data[28]),
-                docArrival: formatIfDate(data[29]),
-                shipRelease: formatIfDate(data[30]),
-                comments: formatIfDate(data[31]),
-                vendorEmail: formatIfDate(data[33]),
-                buyerEmail: formatIfDate(data[34]),
-                leadTime: formatIfDate(data[35])
+            const data = ctxRaw.raw || [];
+            currentPoNo = ctxRaw.poNo || formatIfDate(data[8]) || "";
+
+            let ctx = {
+                row: ctxRaw.row,
+                state: ctxRaw.state,
+                prNo: ctxRaw.prNo,
+                poNo: currentPoNo,
+                supplier: ctxRaw.supplier,
+                blNo: ctxRaw.blNo,
+                piNo: ctxRaw.piNo,
+                delTerm: ctxRaw.delTerm,
+                colorConfig: getStateColorConfig(ctxRaw.state),
+                rawObj: {
+                    company: formatIfDate(data[0]),
+                    prNo: formatIfDate(data[1]),
+                    prDate: formatIfDate(data[2]),
+                    desc: formatIfDate(data[3]),
+                    qty: formatIfDate(data[4]),
+                    supplier: formatIfDate(data[5]),
+                    piNo: formatIfDate(data[6]),
+                    commInv: formatIfDate(data[7]),
+                    poNo: formatIfDate(data[8]),
+                    poIssDate: formatIfDate(data[9]),
+                    fob: formatIfDate(data[10]),
+                    cif: formatIfDate(data[11]),
+                    value: formatIfDate(data[12]),
+                    currency: formatIfDate(data[13]),
+                    payTerm: formatIfDate(data[14]),
+                    delTerm: formatIfDate(data[15]),
+                    poApprDate: formatIfDate(data[16]),
+                    bank: formatIfDate(data[17]),
+                    bankDate: formatIfDate(data[18]),
+                    estReadiness: formatIfDate(data[19]),
+                    reqDelDate: formatIfDate(data[21]),
+                    containers: formatIfDate(data[23]),
+                    containerType: formatIfDate(data[24]),
+                    etd: formatIfDate(data[25]),
+                    eta: formatIfDate(data[26]),
+                    blNo: formatIfDate(data[27]),
+                    acid: formatIfDate(data[28]),
+                    docArrival: formatIfDate(data[29]),
+                    shipRelease: formatIfDate(data[30]),
+                    comments: formatIfDate(data[31]),
+                    vendorEmail: formatIfDate(data[33]),
+                    buyerEmail: formatIfDate(data[34]),
+                    leadTime: formatIfDate(data[35])
+                }
+            };
+            renderContext(ctx);
+        }
+
+        function getStateColorConfig(state) {
+            if (state === "In Transit") return { bg: '#d0e3ff', border: '#3b82f6', text: '#1e3a8a' };
+            if (state === "Under Clearance") return { bg: '#fef7e0', border: '#f59e0b', text: '#78350f' };
+            if (state === "Completed") return { bg: '#bdf4cb', border: '#10b981', text: '#064e3b' };
+            if (state === "Initiated Order") return { bg: '#f3e8ff', border: '#8b5cf6', text: '#4c1d95' };
+            if (state === "Archived") return { bg: '#f1f5f9', border: '#94a3b8', text: '#475569' };
+            return { bg: '#ffffff', border: '#fbbf24', text: '#92400e' };
+        }
+
+        function renderContext(ctx) {
+            if (ctx.error) {
+                document.getElementById('error-msg').innerText = ctx.error;
+                document.getElementById('app-body').style.display = 'none';
+                return;
             }
-        };
-        renderContext(ctx);
-    }
+            document.getElementById('error-msg').innerText = '';
 
-    function getStateColorConfig(state) {
-        if (state === "In Transit") return { bg: '#d0e3ff', border: '#3b82f6', text: '#1e3a8a' };
-        if (state === "Under Clearance") return { bg: '#fef7e0', border: '#f59e0b', text: '#78350f' };
-        if (state === "Completed") return { bg: '#bdf4cb', border: '#10b981', text: '#064e3b' };
-        if (state === "Initiated Order") return { bg: '#f3e8ff', border: '#8b5cf6', text: '#4c1d95' };
-        if (state === "Archived") return { bg: '#f1f5f9', border: '#94a3b8', text: '#475569' };
-        return { bg: '#ffffff', border: '#fbbf24', text: '#92400e' };
-    }
+            const safeState = ctx.state ? String(ctx.state).trim() : "";
+            let isRowChange = false;
 
-    function renderContext(ctx) {
-        if (ctx.error) {
-            document.getElementById('error-msg').innerText = ctx.error;
-            document.getElementById('app-body').style.display = 'none';
-            return;
-        }
-        document.getElementById('error-msg').innerText = '';
+            if (currentRow !== ctx.row) {
+                isRowChange = true;
+                document.querySelectorAll('.dirty-input').forEach(el => el.classList.remove('dirty-input'));
+            }
 
-        const safeState = ctx.state ? String(ctx.state).trim() : "";
-        let isRowChange = false;
+            currentRow = ctx.row;
+            currentState = safeState;
 
-        if (currentRow !== ctx.row) {
-            isRowChange = true;
-            document.querySelectorAll('.dirty-input').forEach(el => el.classList.remove('dirty-input'));
-        }
+            document.getElementById('ctx-po').innerText = `Row ${ctx.row} | ${ctx.prNo || 'No PR'} | ${ctx.poNo || 'No PO'}`;
+            document.getElementById('ctx-supplier').innerText = ctx.supplier || 'Vendor pending';
 
-        currentRow = ctx.row;
-        currentState = safeState;
+            let subText = [];
+            if (ctx.piNo) subText.push("PI: " + ctx.piNo);
+            if (ctx.blNo) subText.push("BL: " + ctx.blNo);
+            if (ctx.delTerm) subText.push("Term: " + ctx.delTerm);
+            document.getElementById('ctx-sub').innerText = subText.join(" | ");
 
-        document.getElementById('ctx-po').innerText = `Row ${ctx.row} | ${ctx.prNo || 'No PR'} | ${ctx.poNo || 'No PO'}`;
-        document.getElementById('ctx-supplier').innerText = ctx.supplier || 'Vendor pending';
+            let stateEl = document.getElementById('ctx-state');
+            stateEl.innerText = safeState;
+            if (ctx.colorConfig) {
+                stateEl.style.backgroundColor = ctx.colorConfig.bg;
+                stateEl.style.color = ctx.colorConfig.text;
+                stateEl.style.borderColor = ctx.colorConfig.border;
 
-        let subText = [];
-        if (ctx.piNo) subText.push("PI: " + ctx.piNo);
-        if (ctx.blNo) subText.push("BL: " + ctx.blNo);
-        if (ctx.delTerm) subText.push("Term: " + ctx.delTerm);
-        document.getElementById('ctx-sub').innerText = subText.join(" | ");
+                let card = document.getElementById('top-card');
+                card.style.borderLeftColor = ctx.colorConfig.border;
+                card.style.background = `linear-gradient(to right, ${ctx.colorConfig.bg}, #ffffff 20%)`;
+            }
 
-        let stateEl = document.getElementById('ctx-state');
-        stateEl.innerText = safeState;
-        if (ctx.colorConfig) {
-            stateEl.style.backgroundColor = ctx.colorConfig.bg;
-            stateEl.style.color = ctx.colorConfig.text;
-            stateEl.style.borderColor = ctx.colorConfig.border;
+            if (safeState === "Completed") {
+                document.getElementById('app-body').style.display = 'none';
+                let msg = document.getElementById('completed-msg');
+                msg.style.display = 'block';
+                msg.innerHTML = "✅ This order is Completed. No further actions required.";
+                msg.style.color = "var(--success)";
+                return;
+            } else if (safeState === "Archived") {
+                document.getElementById('app-body').style.display = 'none';
+                let msg = document.getElementById('completed-msg');
+                msg.style.display = 'block';
+                msg.innerHTML = "🗑️ This order has been Cancelled / Archived.";
+                msg.style.color = "var(--text-muted)";
+                return;
+            }
 
-            let card = document.getElementById('top-card');
-            card.style.borderLeftColor = ctx.colorConfig.border;
-            card.style.background = `linear-gradient(to right, ${ctx.colorConfig.bg}, #ffffff 20%)`;
-        }
-
-        if (safeState === "Completed") {
-            document.getElementById('app-body').style.display = 'none';
-            let msg = document.getElementById('completed-msg');
-            msg.style.display = 'block';
-            msg.innerHTML = "✅ This order is Completed. No further actions required.";
-            msg.style.color = "var(--success)";
-            return;
-        } else if (safeState === "Archived") {
-            document.getElementById('app-body').style.display = 'none';
-            let msg = document.getElementById('completed-msg');
-            msg.style.display = 'block';
-            msg.innerHTML = "🗑️ This order has been Cancelled / Archived.";
-            msg.style.color = "var(--text-muted)";
-            return;
+            document.getElementById('completed-msg').style.display = 'none';
+            document.getElementById('app-body').style.display = 'block';
+            try {
+                if (ctx.rawObj) hydrateInputs(ctx.rawObj, isRowChange);
+                enforcePhaseIsolation(safeState, isRowChange);
+                configureAdvanceButton(safeState);
+            } catch (err) {
+                document.getElementById('error-msg').innerText = "UI Rendering Error: " + err.message;
+            }
         }
 
-        document.getElementById('completed-msg').style.display = 'none';
-        document.getElementById('app-body').style.display = 'block';
-        try {
-            if (ctx.rawObj) hydrateInputs(ctx.rawObj, isRowChange);
-            enforcePhaseIsolation(safeState, isRowChange);
-            configureAdvanceButton(safeState);
-        } catch (err) {
-            document.getElementById('error-msg').innerText = "UI Rendering Error: " + err.message;
-        }
-    }
+        document.addEventListener('input', function (e) {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+                e.target.classList.add('dirty-input');
+            }
+        });
 
-    document.addEventListener('input', function (e) {
-        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
-            e.target.classList.add('dirty-input');
-        }
-    });
+        function hydrateInputs(data, forceWipe) {
+            const map = {
+                'v-company': 'company', 'v-prNo': 'prNo', 'v-prDate': 'prDate', 'v-desc': 'desc',
+                'v-qty': 'qty', 'v-supplier': 'supplier', 'v-vendorEmail': 'vendorEmail', 'v-buyerEmail': 'buyerEmail',
+                'v-poNo': 'poNo', 'v-poIssDate': 'poIssDate', 'v-poApprDate': 'poApprDate', 'v-leadTime': 'leadTime',
+                'v-value': 'value', 'v-currency': 'currency', 'v-payTerm': 'payTerm', 'v-delTerm': 'delTerm',
+                'v-reqDelDate': 'reqDelDate', 'v-piNo': 'piNo', 'v-estReadiness': 'estReadiness',
+                'v-bank': 'bank', 'v-bankDate': 'bankDate', 'v-containers': 'containers',
+                'v-containerType': 'containerType', 'v-etd': 'etd', 'v-urgent-etd': 'etd', 'v-blNo': 'blNo', 'v-acid': 'acid',
+                'v-commInv': 'commInv', 'v-fob': 'fob', 'v-cif': 'cif',
+                'v-docArrival': 'docArrival', 'v-shipRelease': 'shipRelease', 'v-eta': 'eta', 'v-urgent-eta': 'eta', 'v-comments': 'comments'
+            };
 
-    function hydrateInputs(data, forceWipe) {
-        const map = {
-            'v-company': 'company', 'v-prNo': 'prNo', 'v-prDate': 'prDate', 'v-desc': 'desc',
-            'v-qty': 'qty', 'v-supplier': 'supplier', 'v-vendorEmail': 'vendorEmail', 'v-buyerEmail': 'buyerEmail',
-            'v-poNo': 'poNo', 'v-poIssDate': 'poIssDate', 'v-poApprDate': 'poApprDate', 'v-leadTime': 'leadTime',
-            'v-value': 'value', 'v-currency': 'currency', 'v-payTerm': 'payTerm', 'v-delTerm': 'delTerm',
-            'v-reqDelDate': 'reqDelDate', 'v-piNo': 'piNo', 'v-estReadiness': 'estReadiness',
-            'v-bank': 'bank', 'v-bankDate': 'bankDate', 'v-containers': 'containers',
-            'v-containerType': 'containerType', 'v-etd': 'etd', 'v-urgent-etd': 'etd', 'v-blNo': 'blNo', 'v-acid': 'acid',
-            'v-commInv': 'commInv', 'v-fob': 'fob', 'v-cif': 'cif',
-            'v-docArrival': 'docArrival', 'v-shipRelease': 'shipRelease', 'v-eta': 'eta', 'v-urgent-eta': 'eta', 'v-comments': 'comments'
-        };
-
-        for (let [id, key] of Object.entries(map)) {
-            let el = document.getElementById(id);
-            if (el && data[key] !== undefined) {
-                let sheetVal = String(data[key] || "");
-                if (el.tagName === 'SELECT' && sheetVal) {
-                    let exists = Array.from(el.options).some(o => o.value === sheetVal);
-                    if (!exists) {
-                        el.appendChild(new Option(sheetVal + " (Legacy)", sheetVal));
+            for (let [id, key] of Object.entries(map)) {
+                let el = document.getElementById(id);
+                if (el && data[key] !== undefined) {
+                    let sheetVal = String(data[key] || "");
+                    if (el.tagName === 'SELECT' && sheetVal) {
+                        let exists = Array.from(el.options).some(o => o.value === sheetVal);
+                        if (!exists) {
+                            el.appendChild(new Option(sheetVal + " (Legacy)", sheetVal));
+                        }
                     }
-                }
-                if (forceWipe || !el.classList.contains('dirty-input')) {
-                    el.value = sheetVal;
-                }
-                let isFilled = sheetVal.trim() !== "";
-                let formGroup = el.closest ? el.closest('.form-group') : el.parentElement;
-                if (formGroup) {
-                    if (isFilled && !id.includes('v-urgent') && id !== 'v-comments') {
-                        formGroup.style.display = 'none';
-                    } else {
-                        formGroup.style.display = 'block';
+                    if (forceWipe || !el.classList.contains('dirty-input')) {
+                        el.value = sheetVal;
+                    }
+                    let isFilled = sheetVal.trim() !== "";
+                    let formGroup = el.closest ? el.closest('.form-group') : el.parentElement;
+                    if (formGroup) {
+                        if (isFilled && !id.includes('v-urgent') && id !== 'v-comments') {
+                            formGroup.style.display = 'none';
+                        } else {
+                            formGroup.style.display = 'block';
+                        }
                     }
                 }
             }
-        }
-        let flexRows = document.querySelectorAll('.flex-row');
-        for (let i = 0; i < flexRows.length; i++) {
-            let row = flexRows[i];
-            let formGroups = Array.from(row.querySelectorAll('.form-group'));
-            if (formGroups.length > 0) {
-                let allHidden = formGroups.every(fg => fg.style.display === 'none');
-                row.style.display = allHidden ? 'none' : 'flex';
+            let flexRows = document.querySelectorAll('.flex-row');
+            for (let i = 0; i < flexRows.length; i++) {
+                let row = flexRows[i];
+                let formGroups = Array.from(row.querySelectorAll('.form-group'));
+                if (formGroups.length > 0) {
+                    let allHidden = formGroups.every(fg => fg.style.display === 'none');
+                    row.style.display = allHidden ? 'none' : 'flex';
+                }
             }
         }
-    }
 
-    function enforcePhaseIsolation(state, isRowChange) {
-        const phases = {
-            "Initiated Order": { el: document.getElementById('det-req'), rank: 0 },
-            "In Production": { el: document.getElementById('det-prod'), rank: 1 },
-            "In Transit": { el: document.getElementById('det-transit'), rank: 2 },
-            "Under Clearance": { el: document.getElementById('det-clearance'), rank: 3 }
-        };
+        function enforcePhaseIsolation(state, isRowChange) {
+            const phases = {
+                "Initiated Order": { el: document.getElementById('det-req'), rank: 0 },
+                "In Production": { el: document.getElementById('det-prod'), rank: 1 },
+                "In Transit": { el: document.getElementById('det-transit'), rank: 2 },
+                "Under Clearance": { el: document.getElementById('det-clearance'), rank: 3 }
+            };
 
-        let currentRank = phases[state] ? phases[state].rank : -1;
-        for (let key in phases) {
-            let phaseObj = phases[key];
-            if (!phaseObj.el) continue;
-            if (phaseObj.rank > currentRank) {
-                phaseObj.el.style.display = 'none';
-                continue;
+            let currentRank = phases[state] ? phases[state].rank : -1;
+            for (let key in phases) {
+                let phaseObj = phases[key];
+                if (!phaseObj.el) continue;
+                if (phaseObj.rank > currentRank) {
+                    phaseObj.el.style.display = 'none';
+                    continue;
+                }
+                const visibleGroups = Array.from(phaseObj.el.querySelectorAll('.form-group')).filter(el => el.style.display !== 'none');
+                if (key === state) {
+                    phaseObj.el.style.display = 'block';
+                    if (isRowChange) phaseObj.el.open = true;
+                    let compMsgId = 'comp-msg-' + phaseObj.rank;
+                    let msgEl = document.getElementById(compMsgId);
+                    if (!msgEl) {
+                        msgEl = document.createElement('div');
+                        msgEl.id = compMsgId;
+                        msgEl.style = "text-align: center; color: var(--success); font-weight: bolder; padding: 15px; border: 1px dashed var(--success); border-radius: 8px; margin-bottom: 10px;";
+                        msgEl.innerHTML = "✅ All fields for this phase are currently filled!";
+                        let contentDiv = phaseObj.el.querySelector('.details-content');
+                        if (contentDiv) contentDiv.appendChild(msgEl);
+                    }
+                    if (msgEl) {
+                        msgEl.style.display = (visibleGroups.length === 0) ? 'block' : 'none';
+                    }
+                } else if (visibleGroups.length > 0) {
+                    phaseObj.el.style.display = 'block';
+                    if (isRowChange) phaseObj.el.open = false;
+                } else {
+                    phaseObj.el.style.display = 'none';
+                }
             }
-            const visibleGroups = Array.from(phaseObj.el.querySelectorAll('.form-group')).filter(el => el.style.display !== 'none');
-            if (key === state) {
-                phaseObj.el.style.display = 'block';
-                if (isRowChange) phaseObj.el.open = true;
-                let compMsgId = 'comp-msg-' + phaseObj.rank;
-                let msgEl = document.getElementById(compMsgId);
-                if (!msgEl) {
-                    msgEl = document.createElement('div');
-                    msgEl.id = compMsgId;
-                    msgEl.style = "text-align: center; color: var(--success); font-weight: bolder; padding: 15px; border: 1px dashed var(--success); border-radius: 8px; margin-bottom: 10px;";
-                    msgEl.innerHTML = "✅ All fields for this phase are currently filled!";
-                    let contentDiv = phaseObj.el.querySelector('.details-content');
-                    if (contentDiv) contentDiv.appendChild(msgEl);
-                }
-                if (msgEl) {
-                    msgEl.style.display = (visibleGroups.length === 0) ? 'block' : 'none';
-                }
-            } else if (visibleGroups.length > 0) {
-                phaseObj.el.style.display = 'block';
-                if (isRowChange) phaseObj.el.open = false;
+        }
+
+        function syncBinding(targetId, val) {
+            let target = document.getElementById(targetId);
+            if (target) {
+                target.value = val;
+                target.classList.add('dirty-input');
+            }
+        }
+
+        let pendingAdvanceState = false;
+
+        function configureAdvanceButton(state) {
+            const btn = document.getElementById('btn-advance');
+            if (!btn) return;
+            let btnConfig = {
+                "Initiated Order": { label: "🚀 Advance to IN PRODUCTION", next: "In Production" },
+                "In Production": { label: "🚀 Advance to IN TRANSIT", next: "In Transit" },
+                "In Transit": { label: "🚀 Advance to UNDER CLEARANCE", next: "Under Clearance" },
+                "Under Clearance": { label: "🚀 Advance to COMPLETED", next: "Completed" }
+            };
+
+            if (btnConfig[state]) {
+                btn.innerText = btnConfig[state].label;
+                pendingAdvanceState = btnConfig[state].next;
+                btn.style.display = 'block';
             } else {
-                phaseObj.el.style.display = 'none';
+                pendingAdvanceState = false;
+                btn.style.display = 'none';
             }
         }
-    }
 
-    function syncBinding(targetId, val) {
-        let target = document.getElementById(targetId);
-        if (target) {
-            target.value = val;
-            target.classList.add('dirty-input');
+        function validatePhaseAdvancement(nextState) {
+            let requiredFields = [];
+            if (nextState === "In Production") requiredFields = ['v-company', 'v-prNo', 'v-prDate', 'v-desc', 'v-qty', 'v-reqDelDate', 'v-buyerEmail'];
+            else if (nextState === "In Transit") requiredFields = ['v-supplier', 'v-poNo', 'v-delTerm', 'v-leadTime'];
+            else if (nextState === "Under Clearance") requiredFields = ['v-etd', 'v-blNo', 'v-acid', 'v-commInv'];
+            else if (nextState === "Completed") requiredFields = ['v-docArrival', 'v-shipRelease'];
+
+            let missing = [];
+            for (let i = 0; i < requiredFields.length; i++) {
+                let checkEl = document.getElementById(requiredFields[i]);
+                if (checkEl && !checkEl.value.trim()) {
+                    let label = checkEl.parentElement.querySelector('label');
+                    if (label) missing.push(label.innerText);
+                }
+            }
+            if (missing.length > 0) {
+                document.getElementById('error-msg').innerText = "❌ Missing Required Data to Advance Phase: " + missing.join(", ");
+                return false;
+            }
+            return true;
         }
-    }
 
-    let pendingAdvanceState = false;
-
-    function configureAdvanceButton(state) {
-        const btn = document.getElementById('btn-advance');
-        if (!btn) return;
-        let btnConfig = {
-            "Initiated Order": { label: "🚀 Advance to IN PRODUCTION", next: "In Production" },
-            "In Production": { label: "🚀 Advance to IN TRANSIT", next: "In Transit" },
-            "In Transit": { label: "🚀 Advance to UNDER CLEARANCE", next: "Under Clearance" },
-            "Under Clearance": { label: "🚀 Advance to COMPLETED", next: "Completed" }
-        };
-
-        if (btnConfig[state]) {
-            btn.innerText = btnConfig[state].label;
-            pendingAdvanceState = btnConfig[state].next;
-            btn.style.display = 'block';
-        } else {
-            pendingAdvanceState = false;
-            btn.style.display = 'none';
-        }
-    }
-
-    function validatePhaseAdvancement(nextState) {
-        let requiredFields = [];
-        if (nextState === "In Production") requiredFields = ['v-company', 'v-prNo', 'v-prDate', 'v-desc', 'v-qty', 'v-reqDelDate', 'v-buyerEmail'];
-        else if (nextState === "In Transit") requiredFields = ['v-supplier', 'v-poNo', 'v-delTerm', 'v-leadTime'];
-        else if (nextState === "Under Clearance") requiredFields = ['v-etd', 'v-blNo', 'v-acid', 'v-commInv'];
-        else if (nextState === "Completed") requiredFields = ['v-docArrival', 'v-shipRelease'];
-
-        let missing = [];
-        for (let i = 0; i < requiredFields.length; i++) {
-            let checkEl = document.getElementById(requiredFields[i]);
-            if (checkEl && !checkEl.value.trim()) {
-                let label = checkEl.parentElement.querySelector('label');
-                if (label) missing.push(label.innerText);
+        function handleAdvanceClick() {
+            if (pendingAdvanceState) {
+                if (!validatePhaseAdvancement(pendingAdvanceState)) return;
+                submitData(pendingAdvanceState);
             }
         }
-        if (missing.length > 0) {
-            document.getElementById('error-msg').innerText = "❌ Missing Required Data to Advance Phase: " + missing.join(", ");
-            return false;
+
+        function submitData(targetState) {
+            executeSave(targetState);
         }
-        return true;
-    }
 
-    function handleAdvanceClick() {
-        if (pendingAdvanceState) {
-            if (!validatePhaseAdvancement(pendingAdvanceState)) return;
-            submitData(pendingAdvanceState);
-        }
-    }
-
-    function submitData(targetState) {
-        executeSave(targetState);
-    }
-
-    async function executeSave(targetState = null) {
-        document.getElementById('loader').style.display = 'block';
-        document.getElementById('error-msg').innerText = '';
-
-        const mappings = {
-            'company': {id: 'v-company', col: 0}, 'prNo': {id: 'v-prNo', col: 1}, 'prDate': {id: 'v-prDate', col: 2},
-            'desc': {id: 'v-desc', col: 3}, 'qty': {id: 'v-qty', col: 4}, 'supplier': {id: 'v-supplier', col: 5},
-            'piNo': {id: 'v-piNo', col: 6}, 'commInv': {id: 'v-commInv', col: 7}, 'poNo': {id: 'v-poNo', col: 8},
-            'poIssDate': {id: 'v-poIssDate', col: 9}, 'fob': {id: 'v-fob', col: 10}, 'cif': {id: 'v-cif', col: 11},
-            'value': {id: 'v-value', col: 12}, 'currency': {id: 'v-currency', col: 13}, 'payTerm': {id: 'v-payTerm', col: 14},
-            'delTerm': {id: 'v-delTerm', col: 15}, 'poApprDate': {id: 'v-poApprDate', col: 16}, 'bank': {id: 'v-bank', col: 17},
-            'bankDate': {id: 'v-bankDate', col: 18}, 'estReadiness': {id: 'v-estReadiness', col: 19},
-            'reqDelDate': {id: 'v-reqDelDate', col: 21}, 'containers': {id: 'v-containers', col: 23},
-            'containerType': {id: 'v-containerType', col: 24}, 'etd': {id: 'v-etd', col: 25}, 'eta': {id: 'v-eta', col: 26},
-            'blNo': {id: 'v-blNo', col: 27}, 'acid': {id: 'v-acid', col: 28}, 'docArrival': {id: 'v-docArrival', col: 29},
-            'shipRelease': {id: 'v-shipRelease', col: 30}, 'comments': {id: 'v-comments', col: 31},
-            'vendorEmail': {id: 'v-vendorEmail', col: 33}, 'buyerEmail': {id: 'v-buyerEmail', col: 34}, 'leadTime': {id: 'v-leadTime', col: 35}
-        };
-
-        let payloadData = {};
-        for (let key in mappings) {
-            let map = mappings[key];
-            let el = document.getElementById(map.id);
-            if (el && el.classList.contains('dirty-input')) {
-                payloadData[key] = el.value;
+        async function executeSave(targetState = null) {
+            if (!currentPoNo) {
+                onError("Missing PO Number. Cannot update Excel without a unique identifier.");
+                return;
             }
-        }
-        
-        let payload = {
-            action: 'update',
-            poNo: currentPoNo || "",
-            targetState: targetState,
-            data: payloadData
-        };
 
-        try {
-            const res = await fetch(WRITE_FLOW_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+            document.getElementById('loader').style.display = 'block';
+            document.getElementById('error-msg').innerText = '';
+
+            let payload = {
+                poNo: currentPoNo,
+                targetState: targetState || ""
+            };
+
+            const dirtyInputs = document.querySelectorAll('.dirty-input');
+            dirtyInputs.forEach(el => {
+                if (el.id && el.id.startsWith('v-')) {
+                    let key = el.id.substring(2);
+                    // Strip 'urgent-' prefix so Power Automate recognizes the mapping
+                    if (key.startsWith('urgent-')) {
+                        key = key.substring(7);
+                    }
+                    payload[key] = el.value;
+                }
             });
 
-            if (!res.ok) throw new Error("Network response was not OK");
-            
-            document.getElementById('loader').style.display = 'none';
-            document.getElementById('error-msg').style.color = "var(--success)";
-            document.getElementById('error-msg').innerText = "✅ Successfully Saved via Power Automate!";
-            
-            // Wipe dirty state after successful save
-            document.querySelectorAll('.dirty-input').forEach(el => el.classList.remove('dirty-input'));
-            if (targetState) {
-                currentState = targetState;
-                renderContext({ state: targetState, poNo: currentPoNo, row: currentRow, rawObj: {} });
+            try {
+                const res = await fetch(WRITE_FLOW_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!res.ok) throw new Error("Network response was not OK");
+
+                document.getElementById('loader').style.display = 'none';
+                document.getElementById('error-msg').style.color = "var(--success)";
+                document.getElementById('error-msg').innerText = "✅ Successfully Saved via Power Automate!";
+
+                // Close dialog after 1.5 seconds if opened as a popup Window
+                setTimeout(() => { if (window.opener) window.close(); }, 1500);
+
+                // Wipe dirty state after successful save
+                document.querySelectorAll('.dirty-input').forEach(el => el.classList.remove('dirty-input'));
+
+                if (targetState) {
+                    currentState = targetState;
+                    renderContext({ state: targetState, poNo: currentPoNo, row: currentRow, rawObj: {} });
+                }
+            } catch (error) {
+                onError("Flow Error: " + error.message);
             }
-        } catch(error) {
-            onError("Flow Error: " + error.message);
         }
-    }
 
-    async function archiveOrder() {
-        if (!confirm("⚠️ Are you sure you want to Archive/Cancel this order?")) return;
-        document.getElementById('loader').style.display = 'block';
-        document.getElementById('error-msg').innerText = '';
+        async function archiveOrder() {
+            if (!confirm("⚠️ Are you sure you want to Archive/Cancel this order?")) return;
+            // Uses standard saving logic to update state to Archived
+            executeSave("Archived");
+        }
 
-        try {
-            const res = await fetch(WRITE_FLOW_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'archive', poNo: currentPoNo })
-            });
-
-            if (!res.ok) throw new Error("Network response was not OK");
-            
+        function onError(err) {
             document.getElementById('loader').style.display = 'none';
-            document.getElementById('error-msg').style.color = "var(--text-muted)";
-            document.getElementById('error-msg').innerText = "🗑️ Order Archived.";
-            document.getElementById('app-body').style.display = 'none';
-        } catch(error) {
-            onError("Flow Error: " + error.message);
+            let msg = typeof err === 'string' ? err : (err.message || 'An error occurred');
+            let errorEl = document.getElementById('error-msg');
+            // Changed from --danger to red hex code to ensure it renders correctly
+            errorEl.style.color = "#ef4444";
+            errorEl.innerText = msg;
         }
-    }
-
-    function onError(err) {
-        document.getElementById('loader').style.display = 'none';
-        let msg = typeof err === 'string' ? err : (err.message || 'An error occurred');
-        let errorEl = document.getElementById('error-msg');
-        errorEl.style.color = "var(--danger)";
-        errorEl.innerText = msg;
-    }
-</script>
+    </script>
 </body>
 
 </html>
