@@ -3,7 +3,6 @@
 
 <head>
     <base target="_top">
-    <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -354,6 +353,9 @@
     </div>
 
     <script>
+    const READ_FLOW_URL = "YOUR_READ_FLOW_URL_HERE";
+    const WRITE_FLOW_URL = "YOUR_WRITE_FLOW_URL_HERE";
+
     const CONFIG = {
         sheetName: "Tracker",
         cols: {
@@ -369,33 +371,11 @@
 
     let currentRow = -1;
     let currentState = "Initiated Order";
-    let livePollingInterval = null;
+    let currentPoNo = "";
 
-    Office.onReady(function(info) {
-        startLivePolling();
-        
-        window.addEventListener('storage', function(e) {
-            if (e.key === 'ow_feedback' && e.newValue) {
-                let fb = JSON.parse(e.newValue);
-                localStorage.removeItem('ow_feedback');
-                document.getElementById('loader').style.display = 'none';
-                
-                if (fb.type === 'ERROR') {
-                    document.getElementById('error-msg').innerText = "Submit Error: " + fb.msg;
-                    document.getElementById('app-body').style.display = 'block';
-                } else {
-                    currentRow = -1;
-                }
-            }
-        });
+    window.addEventListener('DOMContentLoaded', () => {
+        refreshData();
     });
-
-    function startLivePolling() {
-        if (!livePollingInterval) {
-            livePollingInterval = setInterval(refreshData, 1500);
-            refreshData();
-        }
-    }
 
     function refreshData() {
         if (document.getElementById('loader').style.display === 'block') return;
@@ -417,12 +397,14 @@
             return val ? String(val) : "";
         };
 
-        const data = ctxRaw.raw;
+        const data = ctxRaw.raw || [];
+        currentPoNo = ctxRaw.poNo || formatIfDate(data[8]) || "";
+
         let ctx = {
             row: ctxRaw.row,
             state: ctxRaw.state,
             prNo: ctxRaw.prNo,
-            poNo: ctxRaw.poNo,
+            poNo: currentPoNo,
             supplier: ctxRaw.supplier,
             blNo: ctxRaw.blNo,
             piNo: ctxRaw.piNo,
@@ -699,8 +681,12 @@
     }
 
     function submitData(targetState) {
+        executeSave(targetState);
+    }
+
+    async function executeSave(targetState = null) {
         document.getElementById('loader').style.display = 'block';
-        document.getElementById('app-body').style.display = 'none';
+        document.getElementById('error-msg').innerText = '';
 
         const mappings = {
             'company': {id: 'v-company', col: 0}, 'prNo': {id: 'v-prNo', col: 1}, 'prDate': {id: 'v-prDate', col: 2},
@@ -717,29 +703,75 @@
             'vendorEmail': {id: 'v-vendorEmail', col: 33}, 'buyerEmail': {id: 'v-buyerEmail', col: 34}, 'leadTime': {id: 'v-leadTime', col: 35}
         };
 
-        let pushMaps = {};
+        let payloadData = {};
         for (let key in mappings) {
             let map = mappings[key];
             let el = document.getElementById(map.id);
             if (el && el.classList.contains('dirty-input')) {
-                pushMaps[key] = { col: map.col, val: el.value };
+                payloadData[key] = el.value;
             }
         }
         
         let payload = {
-            row: currentRow,
-            mappings: pushMaps,
-            targetState: targetState
+            action: 'update',
+            poNo: currentPoNo || "",
+            targetState: targetState,
+            data: payloadData
         };
-        
-        localStorage.setItem('ow_action', JSON.stringify({ type: 'SAVE', payload: payload }));
+
+        try {
+            const res = await fetch(WRITE_FLOW_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!res.ok) throw new Error("Network response was not OK");
+            
+            document.getElementById('loader').style.display = 'none';
+            document.getElementById('error-msg').style.color = "var(--success)";
+            document.getElementById('error-msg').innerText = "✅ Successfully Saved via Power Automate!";
+            
+            // Wipe dirty state after successful save
+            document.querySelectorAll('.dirty-input').forEach(el => el.classList.remove('dirty-input'));
+            if (targetState) {
+                currentState = targetState;
+                renderContext({ state: targetState, poNo: currentPoNo, row: currentRow, rawObj: {} });
+            }
+        } catch(error) {
+            onError("Flow Error: " + error.message);
+        }
     }
 
-    function archiveOrder() {
+    async function archiveOrder() {
         if (!confirm("⚠️ Are you sure you want to Archive/Cancel this order?")) return;
         document.getElementById('loader').style.display = 'block';
-        document.getElementById('app-body').style.display = 'none';
-        localStorage.setItem('ow_action', JSON.stringify({ type: 'ARCHIVE', row: currentRow }));
+        document.getElementById('error-msg').innerText = '';
+
+        try {
+            const res = await fetch(WRITE_FLOW_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'archive', poNo: currentPoNo })
+            });
+
+            if (!res.ok) throw new Error("Network response was not OK");
+            
+            document.getElementById('loader').style.display = 'none';
+            document.getElementById('error-msg').style.color = "var(--text-muted)";
+            document.getElementById('error-msg').innerText = "🗑️ Order Archived.";
+            document.getElementById('app-body').style.display = 'none';
+        } catch(error) {
+            onError("Flow Error: " + error.message);
+        }
+    }
+
+    function onError(err) {
+        document.getElementById('loader').style.display = 'none';
+        let msg = typeof err === 'string' ? err : (err.message || 'An error occurred');
+        let errorEl = document.getElementById('error-msg');
+        errorEl.style.color = "var(--danger)";
+        errorEl.innerText = msg;
     }
 </script>
 </body>
