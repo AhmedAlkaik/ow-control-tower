@@ -336,11 +336,11 @@
     </div>
 
     <script>
-        const READ_FLOW_URL = "YOUR_READ_FLOW_URL_HERE";
+        const READ_FLOW_URL = "https://default026147d2bad14ffe8ae1ec20d190d9.2a.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/29/workflows/a2f1fcee95724175b175c517dda13c9b/triggers/manual/paths/invoke?api-version=1";
         const WRITE_FLOW_URL = "YOUR_WRITE_FLOW_URL_HERE";
 
         let currentBuyerFilter = "ALL";
-        let trackerDataCache = [];
+        let trackerDataset = [];
 
         window.addEventListener('DOMContentLoaded', () => {
             initApp();
@@ -354,51 +354,55 @@
         async function fetchTrackerData(silent = false) {
             if (!silent) showLoading(true);
             try {
-                // In production, you would fetch from the READ_FLOW_URL
-                // const res = await fetch(READ_FLOW_URL, {
-                //     method: 'POST',
-                //     headers: { 'Content-Type': 'application/json' },
-                //     body: JSON.stringify({ action: "readAll" })
-                // });
-                // const data = await res.json();
+                const res = await fetch(READ_FLOW_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: "readAll" })
+                });
+
+                if (!res.ok) throw new Error("Network response was not OK.");
                 
-                // For now, representing an empty cache structure until Flow is hooked up
-                let data = trackerDataCache; 
+                const responseData = await res.json();
+                trackerDataset = Array.isArray(responseData) ? responseData : (responseData.value || responseData.rows || []);
                 
-                let counts = {
-                    "Initiated Order": 0,
-                    "In Production": 0,
-                    "In Transit": 0,
-                    "Under Clearance": 0,
-                    "Completed": 0,
-                    "TOTAL_ACTIVE": 0
-                };
-                
-                if (data.length > 0) {
-                    for (let i = 0; i < data.length; i++) {
-                        let state = data[i][32] || "Initiated Order";
-                        let buyer = data[i][34];
-                        
-                        if (currentBuyerFilter && currentBuyerFilter !== "ALL" && String(buyer) !== currentBuyerFilter) continue;
-                        
-                        if (state && state !== "Archived" && state !== "Closed") {
-                            counts["TOTAL_ACTIVE"]++;
-                        }
-                        if (counts[state] !== undefined) counts[state]++;
-                    }
-                }
-                
-                if (!silent) showLoading(false);
-                document.getElementById('kpi-total').innerText = counts["TOTAL_ACTIVE"] || 0;
-                document.getElementById('kpi-req').innerText = counts["Initiated Order"] || 0;
-                document.getElementById('kpi-prod').innerText = counts["In Production"] || 0;
-                document.getElementById('kpi-trans').innerText = counts["In Transit"] || 0;
-                document.getElementById('kpi-clear').innerText = counts["Under Clearance"] || 0;
-                document.getElementById('kpi-comp').innerText = counts["Completed"] || 0;
+                loadKPIsFromMemory(trackerDataset, silent);
                 
             } catch (error) {
                 if (!silent) onError(error);
             }
+        }
+        
+        function loadKPIsFromMemory(data, silent) {
+            let counts = {
+                "Initiated Order": 0,
+                "In Production": 0,
+                "In Transit": 0,
+                "Under Clearance": 0,
+                "Completed": 0,
+                "TOTAL_ACTIVE": 0
+            };
+            
+            if (data.length > 0) {
+                for (let i = 0; i < data.length; i++) {
+                    let state = data[i][32] || "Initiated Order";
+                    let buyer = data[i][34];
+                    
+                    if (currentBuyerFilter && currentBuyerFilter !== "ALL" && String(buyer) !== currentBuyerFilter) continue;
+                    
+                    if (state && state !== "Archived" && state !== "Closed") {
+                        counts["TOTAL_ACTIVE"]++;
+                    }
+                    if (counts[state] !== undefined) counts[state]++;
+                }
+            }
+            
+            if (!silent) showLoading(false);
+            document.getElementById('kpi-total').innerText = counts["TOTAL_ACTIVE"] || 0;
+            document.getElementById('kpi-req').innerText = counts["Initiated Order"] || 0;
+            document.getElementById('kpi-prod').innerText = counts["In Production"] || 0;
+            document.getElementById('kpi-trans').innerText = counts["In Transit"] || 0;
+            document.getElementById('kpi-clear').innerText = counts["Under Clearance"] || 0;
+            document.getElementById('kpi-comp').innerText = counts["Completed"] || 0;
         }
 
         function initApp() {
@@ -473,7 +477,7 @@
             showLoading(true);
             
             try {
-                let data = trackerDataCache; 
+                let data = trackerDataset; 
                 let results = [];
                 let safeQuery = query.toLowerCase().trim();
                 
@@ -510,7 +514,7 @@
             document.getElementById('global-search').value = '';
             showLoading(true);
             try {
-                let data = trackerDataCache;
+                let data = trackerDataset;
                 let results = [];
                 for (let i = 0; i < data.length; i++) {
                     let row = data[i];
@@ -606,7 +610,6 @@
         }
 
         function showActionForm() {
-            // As a standalone web app, we can just open it in a new popup window or iframe.
             window.open('https://ahmedalkaik.github.io/ow-control-tower/ActionDialog.html', 'ActionForm', 'width=450,height=800,scrollbars=yes');
         }
 
