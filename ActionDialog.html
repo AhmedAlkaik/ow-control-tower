@@ -183,14 +183,13 @@
     <!-- CONTEXTUAL ENGINE -->
     <div id="top-card" class="info-card"
         style="border-left: 4px solid var(--primary); display: flex; flex-direction: column;">
-        <div style="margin-bottom: 5px;">
-            <label for="po-dropdown" style="font-size: 0.70rem; color: var(--text-muted); text-transform: uppercase;">1.
-                Select PO Number</label>
-            <select id="po-dropdown" onchange="handlePoSelection()"
-                style="width: 100%; border-color: var(--primary); font-weight: bold; padding: 8px;">
-                <option value="">Loading active orders...</option>
-            </select>
+        <div style="margin-bottom: 5px; display: flex; gap: 8px; align-items: center;">
+            <input type="text" id="action-search-input" placeholder="Search PR No or PO No..." style="flex:1; padding: 8px; border-color: var(--primary);">
+            <button class="btn" style="width: auto; white-space: nowrap; padding: 9px 15px;" onclick="executeActionSearch()">🔍 Search</button>
         </div>
+        
+        <!-- Search Results Dropdown-like display -->
+        <div id="action-search-results" style="display: none; margin-top: 10px; max-height: 180px; overflow-y: auto; border: 1px solid var(--border); border-radius: 4px; padding: 5px; gap: 5px; flex-direction: column; background: #f8fafc;"></div>
 
         <div id="ctx-header"
             style="display: none; justify-content: space-between; align-items: flex-start; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border);">
@@ -391,57 +390,60 @@
                 const responseData = await res.json();
                 trackerCache = Array.isArray(responseData) ? responseData : (responseData.value || responseData.rows || []);
 
-                populateDropdown();
+                
             } catch (error) {
                 onError(error);
             }
             document.getElementById('loader').style.display = 'none';
         }
 
-        function populateDropdown() {
-            const select = document.getElementById('po-dropdown');
-            select.innerHTML = '<option value="">-- Select a PO Number --</option>';
-
-            let poCount = 0;
-            for (let i = 1; i < trackerCache.length; i++) {
-                let row = trackerCache[i];
-                let po = String(row[8] || "").trim();
-                let state = String(row[32] || "");
-                if (po && state !== "Completed" && state !== "Archived") {
-                    let pr = String(row[1] || "");
-                    let opt = document.createElement('option');
-                    opt.value = po;
-                    opt.text = `${po} ${pr ? '(' + pr + ')' : ''} - ${state}`;
-                    select.appendChild(opt);
-                    poCount++;
-                }
-            }
-            if (poCount === 0) {
-                select.options[0].text = "No active POs found.";
-            }
-        }
-
-        function handlePoSelection() {
-            const select = document.getElementById('po-dropdown');
-            const po = select.value;
-            if (!po) {
-                document.getElementById('ctx-header').style.display = 'none';
-                document.getElementById('app-body').style.display = 'none';
+        function executeActionSearch() {
+            const query = document.getElementById('action-search-input').value.toLowerCase().trim();
+            const resultsDiv = document.getElementById('action-search-results');
+            
+            if (!query) {
+                resultsDiv.style.display = 'none';
                 return;
             }
-
-            // Find row in cache
-            let selectedRow = null;
-            let rowIdx = -1;
-            for (let i = 0; i < trackerCache.length; i++) {
-                if (String(trackerCache[i][8] || "").trim() === po) {
-                    selectedRow = trackerCache[i];
-                    rowIdx = i + 1;
-                    break;
+            
+            resultsDiv.innerHTML = '';
+            let matches = 0;
+            
+            for (let i = 1; i < trackerCache.length; i++) {
+                let row = trackerCache[i];
+                let pr = String(row[1] || "").toLowerCase();
+                let po = String(row[8] || "").toLowerCase();
+                let state = String(row[32] || "Initiated Order");
+                
+                if (state !== "Closed" && state !== "Archived") {
+                    if (pr.includes(query) || po.includes(query)) {
+                        matches++;
+                        let btn = document.createElement('div');
+                        btn.style = "padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px; cursor: pointer; font-size: 0.8rem; background: #fff;";
+                        btn.innerHTML = `<div style="font-weight:bold; color:var(--primary);">${row[8] || "No PO"} | ${row[1] || "No PR"}</div><div style="font-size:0.7rem; color:#64748b; margin-top:3px;">${row[5] || "Unknown Supplier"} - <span style="color:var(--text); font-weight:bold; text-transform:uppercase;">${state}</span></div>`;
+                        
+                        // Over hover effect inline
+                        btn.onmouseover = () => btn.style.backgroundColor = '#f1f5f9';
+                        btn.onmouseout = () => btn.style.backgroundColor = '#fff';
+                        
+                        btn.onclick = () => {
+                            resultsDiv.style.display = 'none';
+                            processRowSelection(i + 1, row);
+                        };
+                        resultsDiv.appendChild(btn);
+                    }
                 }
             }
+            
+            if (matches === 0) {
+                resultsDiv.innerHTML = '<div style="font-size: 0.8rem; color: #ef4444; padding: 5px;">No matching orders found.</div>';
+            }
+            
+            resultsDiv.style.display = 'flex';
+        }
 
-            if (!selectedRow) return;
+        function processRowSelection(rowIdx, selectedRow) {
+            document.getElementById('action-search-input').value = String(selectedRow[8] || selectedRow[1] || "");
 
             const formatIfDate = (val) => {
                 if (typeof val === 'number') {
