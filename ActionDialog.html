@@ -186,6 +186,7 @@
         <div style="margin-bottom: 5px; display: flex; gap: 8px; align-items: center;">
             <input type="text" id="action-search-input" placeholder="Search PR No or PO No..." style="flex:1; padding: 8px; border-color: var(--primary);">
             <button class="btn" style="width: auto; white-space: nowrap; padding: 9px 15px;" onclick="executeActionSearch()">🔍 Search</button>
+            <button class="btn success" style="width: auto; white-space: nowrap; padding: 9px 15px; background-color: var(--success);" onclick="createNewOrder()">✨ New</button>
         </div>
         
         <!-- Search Results Dropdown-like display -->
@@ -440,6 +441,15 @@
             }
             
             resultsDiv.style.display = 'flex';
+        }
+
+        function createNewOrder() {
+            document.getElementById('action-search-results').style.display = 'none';
+            document.getElementById('action-search-input').value = "";
+            currentPoNo = "";
+            
+            let emptyData = new Array(36).fill("");
+            processRowSelection(-1, emptyData);
         }
 
         function processRowSelection(rowIdx, selectedRow) {
@@ -743,8 +753,11 @@
         }
 
         async function executeSave(targetState = null) {
-            if (!currentPoNo) {
-                onError("Missing PO Number. Cannot update Excel without a unique identifier.");
+            currentPoNo = document.getElementById('v-poNo').value || currentPoNo;
+            let currentPrNo = document.getElementById('v-prNo').value;
+            
+            if (!currentPoNo && !currentPrNo) {
+                onError("Missing Identifier. Please enter a PR Number or PO Number to create a record.");
                 return;
             }
 
