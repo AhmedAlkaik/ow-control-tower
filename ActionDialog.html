@@ -771,7 +771,9 @@
             document.getElementById('error-msg').innerText = '';
 
             let payload = {
+                action: (currentRow === -1) ? "create" : "update",
                 poNo: currentPoNo,
+                prNo: currentPrNo,
                 targetState: targetState || ""
             };
 
