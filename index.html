@@ -362,13 +362,88 @@
         <script>
                         
     
+
         let currentBuyerFilter = "ALL";
         let trackerDataset = [];
         let dialog = null;
+        let activePoller = null;
+        let lastRowIdx = -1;
 
         Office.onReady((info) => {
             initApp();
+            activePoller = setInterval(pollActiveRow, 1000);
         });
+
+        async function pollActiveRow() {
+            try {
+                await Excel.run(async (context) => {
+                    const sheet = context.workbook.worksheets.getItemOrNullObject("Tracker");
+                    await context.sync();
+                    if (sheet.isNullObject) return;
+
+                    const activeCell = context.workbook.getActiveCell();
+                    activeCell.load("rowIndex");
+                    await context.sync();
+                    
+                    let r = activeCell.rowIndex;
+                    if (r === lastRowIdx) return;
+                    lastRowIdx = r;
+                    
+                    if (r === 0) {
+                        localStorage.setItem('ow_ctx_live', JSON.stringify({ rowIdx: 0, raw: new Array(36).fill(""), state: "" }));
+                        return;
+                    }
+                    
+                    let range = sheet.getRangeByIndexes(r, 0, 1, 36);
+                    range.load("values");
+                    await context.sync();
+                    
+                    let data = range.values[0];
+                    let state = data[32] || "Initiated Order";
+                    // If row is totally blank
+                    if (!data[1] && !data[2] && !data[3]) state = "Initiated Order";
+                    
+                    localStorage.setItem('ow_ctx_live', JSON.stringify({
+                        rowIdx: r + 1,
+                        state: state,
+                        raw: data
+                    }));
+                });
+            } catch (err) {
+                // Background poll might fail if user is typing
+            }
+        }
+
+        async function syncRowColors(silent = true) {
+            try {
+                await Excel.run(async (context) => {
+                    const sheet = context.workbook.worksheets.getItem("Tracker");
+                    const range = sheet.getUsedRange();
+                    range.load(["values", "rowCount"]);
+                    await context.sync();
+                    
+                    let rowCount = range.rowCount;
+                    let values = range.values;
+                    
+                    for (let i = 1; i < rowCount; i++) {
+                        let state = values[i][32];
+                        let bg = '#ffffff'; // default
+                        
+                        if (state === "In Transit") bg = '#d0e3ff';
+                        else if (state === "Under Clearance") bg = '#fef7e0';
+                        else if (state === "Completed") bg = '#bdf4cb';
+                        else if (state === "Initiated Order") bg = '#f3e8ff';
+                        else if (state === "Archived") bg = '#f1f5f9';
+                        else if (state === "In Production") bg = '#fffbeb';
+                        
+                        // We format the whole row matching active data bounds
+                        let rowRange = sheet.getRangeByIndexes(i, 0, 1, 36);
+                        rowRange.format.fill.color = bg;
+                    }
+                    await context.sync();
+                });
+            } catch(e) {}
+        }
 
         async function initApp() {
             showLoading(true);
@@ -415,6 +490,7 @@
                     currentBuyerFilter = select.value;
                     loadKPIsFromMemory(trackerDataset, false);
                 });
+                syncRowColors(); // trigger background color sync
             } catch (error) {
                 onError(error);
             }
@@ -431,10 +507,12 @@
                     trackerDataset = usedRange.values;
                     loadKPIsFromMemory(trackerDataset, silent);
                 });
+                syncRowColors();
             } catch (error) {
                 if (!silent) onError(error);
             }
         }
+
 
         function loadKPIsFromMemory(data, silent) {
             let counts = {
@@ -526,18 +604,41 @@
             }
         }
 
+
         async function applyFilter(stateFilter) {
             document.getElementById('global-search').value = '';
             showLoading(true);
             try {
+                // Apply excel native row-hiding!
+                await Excel.run(async (context) => {
+                    const sheet = context.workbook.worksheets.getItem("Tracker");
+                    const usedRange = sheet.getUsedRange();
+                    usedRange.load(["rowCount", "values"]);
+                    await context.sync();
+                    
+                    for (let i = 1; i < usedRange.rowCount; i++) {
+                        let state = usedRange.values[i][32] || "Initiated Order";
+                        let rowRange = sheet.getRangeByIndexes(i, 0, 1, 36);
+                        
+                        let match = false;
+                        if (stateFilter === "ALL" && state !== "Archived" && state !== "Closed" && state) {
+                            match = true;
+                        } else if (state === stateFilter) {
+                            match = true;
+                        }
+                        
+                        // rowHidden requires full row, actually getRangeByIndexes gets columns A to AJ, so we can set rowHidden on it
+                        rowRange.rowHidden = !match;
+                    }
+                    await context.sync();
+                });
+
+                // Update UI results list internally
                 let data = trackerDataset;
                 let results = [];
                 for (let i = 1; i < data.length; i++) {
                     let row = data[i];
                     let state = row[32] || "Initiated Order";
-                    let buyer = row[34];
-                    if (currentBuyerFilter && currentBuyerFilter !== "ALL" && String(buyer) !== currentBuyerFilter) continue;
-                    
                     let match = false;
                     if (stateFilter === "ALL" && state !== "Archived" && state !== "Closed" && state) {
                         match = true;
@@ -549,21 +650,18 @@
                         results.push({
                             rowIdx: i + 1,
                             state: state || "PENDING",
-                            po: row[8] || "No PO",
                             pr: row[1] || "No PR",
+                            po: row[8] || "No PO",
                             supplier: row[5] || "TBD Vendor",
-                            piNo: row[6] || "",
-                            blNo: row[27] || "",
-                            delTerm: row[15] || "",
                             raw: row,
                             colors: getStateColorConfig(state)
                         });
-                        if (results.length > 99) break;
+                        if(results.length > 99) break;
                     }
                 }
                 renderResults(results);
             } catch(error) {
-                onError(error);
+                onError("Failed to apply Excel Filter: " + error.message);
             }
         }
 

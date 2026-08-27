@@ -377,85 +377,42 @@
         let currentPoNo = "";
 
         let trackerCache = [];
+        let currentRow = -1;
+        let currentPoNo = "";
+        let currentPrNo = "";
 
         Office.onReady((info) => {
+            setInterval(fetchTrackerData, 1000);
             fetchTrackerData();
         });
 
-        async function fetchTrackerData() {
-            document.getElementById('loader').style.display = 'block';
+        function fetchTrackerData() {
+            if (document.getElementById('loader').style.display === 'block') return;
             try {
-                let ctxStr = localStorage.getItem('ow_ctx_db');
+                let ctxStr = localStorage.getItem('ow_ctx_live');
                 if (ctxStr) {
                     let ctxObj = JSON.parse(ctxStr);
-                    trackerCache = ctxObj.raw || [];
+                    if (ctxObj.rowIdx === currentRow) return; // Only process on row selection change!
                     
-                    if (ctxObj.activeRowIdx !== -1 && ctxObj.activeRow) {
-                        processRowSelection(ctxObj.activeRowIdx, ctxObj.activeRow);
+                    if (ctxObj.rowIdx === 0) {
+                         // Header clicked => hide form
+                         document.getElementById('ctx-po').innerText = "Header Selected | Select a valid row";
+                         document.getElementById('app-body').style.display = 'none';
+                         currentRow = 0;
+                         return;
+                    }
+                    
+                    // If row is entirely detached/new, process it gracefully
+                    if (ctxObj.raw && ctxObj.raw.length > 0) {
+                         processRowSelection(ctxObj.rowIdx, ctxObj.raw);
                     }
                 }
             } catch (error) {
-                onError("Failed to read context dataset: " + error.message);
+                // Ignore loop failures
             }
-            document.getElementById('loader').style.display = 'none';
-        }
-
-        function executeActionSearch() {
-            const query = document.getElementById('action-search-input').value.toLowerCase().trim();
-            const resultsDiv = document.getElementById('action-search-results');
-            
-            if (!query) {
-                resultsDiv.style.display = 'none';
-                return;
-            }
-            
-            resultsDiv.innerHTML = '';
-            let matches = 0;
-            
-            for (let i = 1; i < trackerCache.length; i++) {
-                let row = trackerCache[i];
-                let pr = String(row[1] || "").toLowerCase();
-                let po = String(row[8] || "").toLowerCase();
-                let state = String(row[32] || "Initiated Order");
-                
-                if (state !== "Closed" && state !== "Archived") {
-                    if (pr.includes(query) || po.includes(query)) {
-                        matches++;
-                        let btn = document.createElement('div');
-                        btn.style = "padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px; cursor: pointer; font-size: 0.8rem; background: #fff;";
-                        btn.innerHTML = `<div style="font-weight:bold; color:var(--primary);">${row[8] || "No PO"} | ${row[1] || "No PR"}</div><div style="font-size:0.7rem; color:#64748b; margin-top:3px;">${row[5] || "Unknown Supplier"} - <span style="color:var(--text); font-weight:bold; text-transform:uppercase;">${state}</span></div>`;
-                        
-                        btn.onmouseover = () => btn.style.backgroundColor = '#f1f5f9';
-                        btn.onmouseout = () => btn.style.backgroundColor = '#fff';
-                        
-                        btn.onclick = () => {
-                            resultsDiv.style.display = 'none';
-                            processRowSelection(i + 1, row);
-                        };
-                        resultsDiv.appendChild(btn);
-                    }
-                }
-            }
-            
-            if (matches === 0) {
-                resultsDiv.innerHTML = '<div style="font-size: 0.8rem; color: #ef4444; padding: 5px;">No matching orders found.</div>';
-            }
-            
-            resultsDiv.style.display = 'flex';
-        }
-
-        function createNewOrder() {
-            document.getElementById('action-search-results').style.display = 'none';
-            document.getElementById('action-search-input').value = "";
-            currentPoNo = "";
-            
-            let emptyData = new Array(36).fill("");
-            processRowSelection(-1, emptyData);
         }
 
         function processRowSelection(rowIdx, selectedRow) {
-            document.getElementById('action-search-input').value = String(selectedRow[8] || selectedRow[1] || "");
-
             const formatIfDate = (val) => {
                 if (typeof val === 'number') {
                     const d = new Date(Math.round((val - 25569) * 86400 * 1000));
@@ -464,19 +421,24 @@
                 return val ? String(val) : "";
             };
 
-            const data = selectedRow;
+            const data = selectedRow || new Array(36).fill("");
             currentPoNo = String(data[8] || "");
+            currentPrNo = String(data[1] || "");
+            
+            // Assume empty row logic => Initiated Order
+            let stateStr = data[32] || "Initiated Order";
+            if (!data[1] && !data[2] && !data[3]) stateStr = "Initiated Order";
 
             let ctx = {
                 row: rowIdx,
-                state: data[32] || "Initiated Order",
-                prNo: data[1],
+                state: stateStr,
+                prNo: currentPrNo,
                 poNo: currentPoNo,
-                supplier: data[5],
-                blNo: data[27],
-                piNo: data[6],
-                delTerm: data[15],
-                colorConfig: getStateColorConfig(data[32] || "Initiated Order"),
+                supplier: formatIfDate(data[5]),
+                blNo: formatIfDate(data[27]),
+                piNo: formatIfDate(data[6]),
+                delTerm: formatIfDate(data[15]),
+                colorConfig: getStateColorConfig(stateStr),
                 rawObj: {
                     company: formatIfDate(data[0]),
                     prNo: formatIfDate(data[1]),
@@ -514,9 +476,9 @@
                 }
             };
             
-            document.getElementById('ctx-header').style.display = 'flex';
             renderContext(ctx);
         }
+
 
 
         function getStateColorConfig(state) {
