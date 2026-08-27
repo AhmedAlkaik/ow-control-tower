@@ -371,13 +371,10 @@
 
     <script>
         // Note: Update READ_FLOW_URL below once you have it from Power Automate
-                
-        let currentRow = -1;
-        let currentState = "Initiated Order";
-        let currentPoNo = "";
 
         let trackerCache = [];
         let currentRow = -1;
+        let currentState = "Initiated Order";
         let currentPoNo = "";
         let currentPrNo = "";
 
@@ -393,18 +390,18 @@
                 if (ctxStr) {
                     let ctxObj = JSON.parse(ctxStr);
                     if (ctxObj.rowIdx === currentRow) return; // Only process on row selection change!
-                    
+
                     if (ctxObj.rowIdx === 0) {
-                         // Header clicked => hide form
-                         document.getElementById('ctx-po').innerText = "Header Selected | Select a valid row";
-                         document.getElementById('app-body').style.display = 'none';
-                         currentRow = 0;
-                         return;
+                        // Header clicked => hide form
+                        document.getElementById('ctx-po').innerText = "Header Selected | Select a valid row";
+                        document.getElementById('app-body').style.display = 'none';
+                        currentRow = 0;
+                        return;
                     }
-                    
+
                     // If row is entirely detached/new, process it gracefully
                     if (ctxObj.raw && ctxObj.raw.length > 0) {
-                         processRowSelection(ctxObj.rowIdx, ctxObj.raw);
+                        processRowSelection(ctxObj.rowIdx, ctxObj.raw);
                     }
                 }
             } catch (error) {
@@ -424,7 +421,7 @@
             const data = selectedRow || new Array(36).fill("");
             currentPoNo = String(data[8] || "");
             currentPrNo = String(data[1] || "");
-            
+
             // Assume empty row logic => Initiated Order
             let stateStr = data[32] || "Initiated Order";
             if (!data[1] && !data[2] && !data[3]) stateStr = "Initiated Order";
@@ -475,7 +472,7 @@
                     leadTime: formatIfDate(data[35])
                 }
             };
-            
+
             renderContext(ctx);
         }
 
@@ -720,7 +717,7 @@
         async function executeSave(targetState = null) {
             currentPoNo = document.getElementById('v-poNo').value || currentPoNo;
             let currentPrNo = document.getElementById('v-prNo').value;
-            
+
             if (!currentPoNo && !currentPrNo) {
                 onError("Missing Identifier. Please enter a PR Number or PO Number to create a record.");
                 return;
