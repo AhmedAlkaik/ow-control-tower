@@ -755,7 +755,7 @@
                 // Hydrate DB if clicking New without a row clicked
                 localStorage.setItem('ow_ctx_db', JSON.stringify({ raw: trackerDataset, activeRowIdx: -1, activeRow: [] }));
 
-                Office.context.ui.displayDialogAsync('https://ahmedalkaik.github.io/ow-control-tower/ActionDialog.html', { height: 75, width: 40, displayInIframe: true },
+                Office.context.ui.displayDialogAsync('https://ahmedalkaik.github.io/ow-control-tower/ActionDialog.html', { height: 75, width: 40, displayInIframe: false },
                     function (asyncResult) {
                         if (asyncResult.status === Office.AsyncResultStatus.Failed) {
                             onError("Dialog Error: " + asyncResult.error.message);
@@ -860,8 +860,8 @@
                     });
 
                     showLoading(false);
-                    if (dialog) dialog.close();
-                    fetchTrackerData(true); // reload memory
+                    // if (dialog) dialog.close();
+                    // fetchTrackerData(true); // reload memory manually
                 } catch (err) {
                     onError("Failed to execute Excel update: " + err.message);
                 }
