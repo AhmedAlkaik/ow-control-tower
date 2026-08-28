@@ -1497,7 +1497,7 @@
                     });
 
                     try {
-                        window.parent.postMessage(JSON.stringify(payload), "*");
+                        processMessage({ message: JSON.stringify(payload) });
 
                     } catch (error) {
                         onError("Office IPC Error: " + error.message);
