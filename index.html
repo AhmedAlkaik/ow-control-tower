@@ -697,6 +697,9 @@
                                 document.getElementById('error-msg').style.color = "var(--success)";
                                 document.getElementById('error-msg').innerText = "✅ Successfully saved to Row " + payload.targetRow;
                                 setTimeout(() => { document.getElementById('error-msg').innerText = ""; document.getElementById('error-msg').style.color = "#ef4444"; }, 3000);
+                                // Reset the poller lock so that the background poller forces a fresh fetch from the spreadsheet instantly!
+                                lastRowIdx = -1;
+
                                 document.getElementById('error-msg').innerText = "Tracker sheet not found.";
                                 return;
                             }
@@ -798,6 +801,9 @@
                                 document.getElementById('error-msg').style.color = "var(--success)";
                                 document.getElementById('error-msg').innerText = "✅ Successfully saved to Row " + payload.targetRow;
                                 setTimeout(() => { document.getElementById('error-msg').innerText = ""; document.getElementById('error-msg').style.color = "#ef4444"; }, 3000);
+                                // Reset the poller lock so that the background poller forces a fresh fetch from the spreadsheet instantly!
+                                lastRowIdx = -1;
+
                     document.getElementById('kpi-total').innerText = counts["TOTAL_ACTIVE"] || 0;
                     document.getElementById('kpi-req').innerText = counts["Initiated Order"] || 0;
                     document.getElementById('kpi-prod').innerText = counts["In Production"] || 0;
@@ -946,6 +952,9 @@
                                 document.getElementById('error-msg').style.color = "var(--success)";
                                 document.getElementById('error-msg').innerText = "✅ Successfully saved to Row " + payload.targetRow;
                                 setTimeout(() => { document.getElementById('error-msg').innerText = ""; document.getElementById('error-msg').style.color = "#ef4444"; }, 3000);
+                                // Reset the poller lock so that the background poller forces a fresh fetch from the spreadsheet instantly!
+                                lastRowIdx = -1;
+
                     document.getElementById('kpi-panel').style.display = 'none';
                     document.getElementById('results-panel').style.display = 'block';
 
@@ -1118,6 +1127,9 @@
                                 document.getElementById('error-msg').style.color = "var(--success)";
                                 document.getElementById('error-msg').innerText = "✅ Successfully saved to Row " + payload.targetRow;
                                 setTimeout(() => { document.getElementById('error-msg').innerText = ""; document.getElementById('error-msg').style.color = "#ef4444"; }, 3000);
+                                // Reset the poller lock so that the background poller forces a fresh fetch from the spreadsheet instantly!
+                                lastRowIdx = -1;
+
                         // 
                         // fetchTrackerData(true); // reload memory manually
                     } catch (err) {
@@ -1134,6 +1146,9 @@
                                 document.getElementById('error-msg').style.color = "var(--success)";
                                 document.getElementById('error-msg').innerText = "✅ Successfully saved to Row " + payload.targetRow;
                                 setTimeout(() => { document.getElementById('error-msg').innerText = ""; document.getElementById('error-msg').style.color = "#ef4444"; }, 3000);
+                                // Reset the poller lock so that the background poller forces a fresh fetch from the spreadsheet instantly!
+                                lastRowIdx = -1;
+
                     const e = document.getElementById('error-msg');
                     let msg = typeof err === 'string' ? err : (err.message || 'An error occurred');
                     if (e) e.innerText = msg;
