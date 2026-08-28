@@ -801,7 +801,7 @@
 
                     if (data && data.length > 1) {
                         for (let i = 1; i < data.length; i++) {
-                            let state = data[i][1] || "Initiated Order";
+                            let state = String(data[i][1] || "Initiated Order").trim();
                             let buyer = data[i][44];
 
                             if (currentBuyerFilter && currentBuyerFilter !== "ALL" && String(buyer) !== currentBuyerFilter) continue;
@@ -1153,8 +1153,13 @@
                 function processRowSelection(rowIdx, selectedRow) {
                     const formatIfDate = (val) => {
                         if (typeof val === 'number') {
-                            const d = new Date(Math.round((val - 25569) * 86400 * 1000));
-                            return d.toISOString().split('T')[0];
+                            // Excel dates in the 2020s are around 44000-48000.
+                            // If a user types 30 for lead time, it's NOT a date!
+                            if (val > 30000 && val < 90000) {
+                                const d = new Date(Math.round((val - 25569) * 86400 * 1000));
+                                return d.toISOString().split('T')[0];
+                            }
+                            return String(val); // Return normal numbers normally!
                         }
                         return val ? String(val) : "";
                     };
