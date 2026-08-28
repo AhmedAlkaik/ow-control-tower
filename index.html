@@ -387,8 +387,7 @@
                     </div>
                     <div style="text-align: right;">
                         <label style="display: flex; align-items: center; gap: 5px; font-weight: bold; color: var(--primary); font-size: 0.8rem; cursor: pointer;">
-                                <input type="checkbox" id="edit-mode-toggle"
-                                    onchange="document.body.classList.toggle('edit-mode', this.checked); document.querySelectorAll('details').forEach(d => { if(this.checked) { d.style.display='block'; d.open=true; } else { enforcePhaseIsolation(currentState, false); } })">✏️ Edit All
+                                <input type="checkbox" id="edit-mode-toggle" onchange="toggleEditMode(this.checked)">✏️ Edit All
                             </label>
                     </div>
                 </div>
@@ -675,6 +674,28 @@
                             await context.sync();
                         });
                     } catch (e) { }
+                }
+
+                async 
+
+                function toggleEditMode(isChecked) {
+                    document.body.classList.toggle('edit-mode', isChecked);
+                    document.querySelectorAll('details').forEach(d => { 
+                        if(isChecked) { 
+                            d.style.display='block'; 
+                            d.open=true; 
+                        } else { 
+                            // Only isolate phases if not archived/completed lock
+                            enforcePhaseIsolation(currentState, false); 
+                        } 
+                    });
+                    
+                    // Force the app-body to show if we want to edit a completed/archived order!
+                    if (isChecked) {
+                        document.getElementById('app-body').style.display = 'block';
+                    } else if (currentState === "Archived" || currentState === "Completed" || currentState === "Closed") {
+                        document.getElementById('app-body').style.display = 'none';
+                    }
                 }
 
                 async function initApp() {
