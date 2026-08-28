@@ -555,7 +555,7 @@
                 'v-bank': 'bank', 'v-bankDate': 'bankDate', 'v-containers': 'containers',
                 'v-containerType': 'containerType', 'v-etd': 'etd', 'v-urgent-etd': 'etd', 'v-blNo': 'blNo', 'v-acid': 'acid',
                 'v-commInv': 'commInv', 'v-fob': 'fob', 'v-cif': 'cif',
-                'v-docArrival': 'docArrival', 'v-shipRelease': 'shipRelease', 'v-eta': 'eta', 'v-urgent-eta': 'eta', 'v-comments': 'comments'
+                'v-shipRelease': 'shipRelease', 'v-eta': 'eta', 'v-urgent-eta': 'eta', 'v-comments': 'comments'
             };
 
             for (let [id, key] of Object.entries(map)) {
@@ -699,7 +699,7 @@
             if (currentState === "Initiated Order") reqFields = ['v-company', 'v-prNo', 'v-prDate', 'v-desc', 'v-qty', 'v-reqDelDate', 'v-buyerEmail'];
             else if (currentState === "In Production") reqFields = ['v-supplier', 'v-poNo', 'v-delTerm', 'v-leadTime', 'v-vendorEmail', 'v-poIssDate', 'v-poApprDate'];
             else if (currentState === "In Transit") reqFields = ['v-etd', 'v-blNo', 'v-acid', 'v-commInv'];
-            else if (currentState === "Under Clearance") reqFields = ['v-docArrival', 'v-shipRelease'];
+            else if (currentState === "Under Clearance") reqFields = ['v-shipRelease'];
 
             reqFields.forEach(id => {
                 let el = document.getElementById(id);
@@ -721,7 +721,7 @@
             if (nextState === "In Production") requiredFields = ['v-company', 'v-prNo', 'v-prDate', 'v-desc', 'v-qty', 'v-reqDelDate', 'v-buyerEmail'];
             else if (nextState === "In Transit") requiredFields = ['v-supplier', 'v-poNo', 'v-delTerm', 'v-leadTime'];
             else if (nextState === "Under Clearance") requiredFields = ['v-etd', 'v-blNo', 'v-acid', 'v-commInv'];
-            else if (nextState === "Completed") requiredFields = ['v-docArrival', 'v-shipRelease'];
+            else if (nextState === "Completed") requiredFields = ['v-shipRelease'];
 
             let missing = [];
             for (let i = 0; i < requiredFields.length; i++) {
