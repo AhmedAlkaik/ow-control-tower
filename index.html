@@ -444,7 +444,7 @@
                                 <div class="form-group"><label>Item Description</label><input type="text" id="v-desc"></div>
                             </div>
                             <div class="flex-row">
-                                <div class="form-group"><label>Lead Time</label><input type="number" id="v-leadTime"></div>
+                                <div class="form-group"><label>Lead Time</label><input type="text" id="v-leadTime"></div>
                                 <div class="form-group"><label>BuyerEmail</label><input type="email" id="v-buyerEmail"></div>
                             </div>
                         </div>
@@ -467,7 +467,7 @@
                             </div>
                             <div class="flex-row">
                                 <div class="form-group"><label>PI NO.</label><input type="text" id="v-piNo"></div>
-                                <div class="form-group"><label>Quantity</label><input type="number" id="v-qty"></div>
+                                <div class="form-group"><label>Quantity</label><input type="text" id="v-qty"></div>
                             </div>
                             <div class="flex-row">
                                 <div class="form-group"><label>Unit</label><input type="text" id="v-unit"></div>
@@ -508,7 +508,7 @@
                                 <div class="form-group"><label>ETA</label><input type="date" id="v-eta" onclick="this.showPicker()"></div>
                             </div>
                             <div class="flex-row">
-                                <div class="form-group"><label>No. of Containers</label><input type="number" id="v-containers"></div>
+                                <div class="form-group"><label>No. of Containers</label><input type="text" id="v-containers"></div>
                                 <div class="form-group"><label>Container Type</label><input type="text" id="v-containerType"></div>
                             </div>
                         </div>
@@ -576,6 +576,16 @@
                 let dialog = null;
                 let activePoller = null;
                 let isProcessing = false;
+                document.addEventListener('input', function(e) {
+                    if (e.target && e.target.id && e.target.id.startsWith('v-')) {
+                        e.target.classList.add('dirty-input');
+                    }
+                });
+                document.addEventListener('change', function(e) {
+                    if (e.target && e.target.id && e.target.id.startsWith('v-')) {
+                        e.target.classList.add('dirty-input');
+                    }
+                });
                 let lastRowIdx = -1;
 
                 Office.onReady((info) => {
@@ -680,7 +690,10 @@
                             await context.sync();
 
                             if (sheet.isNullObject) {
-                                showLoading(false);
+                                                                showLoading(false);
+                                document.getElementById('error-msg').style.color = "var(--success)";
+                                document.getElementById('error-msg').innerText = "✅ Successfully saved to Row " + payload.targetRow;
+                                setTimeout(() => { document.getElementById('error-msg').innerText = ""; document.getElementById('error-msg').style.color = "#ef4444"; }, 3000);
                                 document.getElementById('error-msg').innerText = "Tracker sheet not found.";
                                 return;
                             }
@@ -778,7 +791,10 @@
                         }
                     }
 
-                    if (!silent) showLoading(false);
+                    if (!silent)                                 showLoading(false);
+                                document.getElementById('error-msg').style.color = "var(--success)";
+                                document.getElementById('error-msg').innerText = "✅ Successfully saved to Row " + payload.targetRow;
+                                setTimeout(() => { document.getElementById('error-msg').innerText = ""; document.getElementById('error-msg').style.color = "#ef4444"; }, 3000);
                     document.getElementById('kpi-total').innerText = counts["TOTAL_ACTIVE"] || 0;
                     document.getElementById('kpi-req').innerText = counts["Initiated Order"] || 0;
                     document.getElementById('kpi-prod').innerText = counts["In Production"] || 0;
@@ -923,7 +939,10 @@
                 }
 
                 function renderResults(res) {
-                    showLoading(false);
+                                                    showLoading(false);
+                                document.getElementById('error-msg').style.color = "var(--success)";
+                                document.getElementById('error-msg').innerText = "✅ Successfully saved to Row " + payload.targetRow;
+                                setTimeout(() => { document.getElementById('error-msg').innerText = ""; document.getElementById('error-msg').style.color = "#ef4444"; }, 3000);
                     document.getElementById('kpi-panel').style.display = 'none';
                     document.getElementById('results-panel').style.display = 'block';
 
@@ -1092,7 +1111,10 @@
                             await context.sync();
                         });
 
-                        showLoading(false);
+                                                        showLoading(false);
+                                document.getElementById('error-msg').style.color = "var(--success)";
+                                document.getElementById('error-msg').innerText = "✅ Successfully saved to Row " + payload.targetRow;
+                                setTimeout(() => { document.getElementById('error-msg').innerText = ""; document.getElementById('error-msg').style.color = "#ef4444"; }, 3000);
                         // 
                         // fetchTrackerData(true); // reload memory manually
                     } catch (err) {
@@ -1105,7 +1127,10 @@
                     if (l) l.style.display = show ? 'block' : 'none';
                 }
                 function onError(err) {
-                    showLoading(false);
+                                                    showLoading(false);
+                                document.getElementById('error-msg').style.color = "var(--success)";
+                                document.getElementById('error-msg').innerText = "✅ Successfully saved to Row " + payload.targetRow;
+                                setTimeout(() => { document.getElementById('error-msg').innerText = ""; document.getElementById('error-msg').style.color = "#ef4444"; }, 3000);
                     const e = document.getElementById('error-msg');
                     let msg = typeof err === 'string' ? err : (err.message || 'An error occurred');
                     if (e) e.innerText = msg;
