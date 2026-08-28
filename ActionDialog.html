@@ -782,7 +782,7 @@
             });
 
             try {
-                Office.context.ui.messageParent(JSON.stringify(payload));
+                window.parent.postMessage(JSON.stringify(payload), "*");
                 document.getElementById('loader').style.display = 'none';
             } catch (error) {
                 onError("Office IPC Error: " + error.message);
