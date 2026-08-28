@@ -1506,7 +1506,7 @@
 
                 async function archiveOrder() {
                     if (!confirm("⚠️ Are you sure you want to Archive/Cancel this order?")) return;
-                    Office.context.ui.messageParent(JSON.stringify({ action: "archive", poNo: currentPoNo, prNo: document.getElementById('v-prNo').value }));
+                    processMessage({ message: JSON.stringify({ action: "archive", poNo: currentPoNo, prNo: document.getElementById('v-prNo').value }) });
                 }
 
                 function onError(err) {
