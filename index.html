@@ -420,7 +420,7 @@
                             </div>
                             <button class="btn"
                                 style="flex: 0.5; background-color: var(--warning); color: white; padding: 8px;"
-                                onclick="submitData(false)">ðŸ”„ Update</button>
+                                onclick="submitData(false)">🔄 Update</button>
                         </div>
                     </div>
 
@@ -428,25 +428,24 @@
                         <summary>📋 Phase 0: Initiated Order (Pre-PO)</summary>
                         <div class="details-content">
                             <div class="flex-row">
+                                <div class="form-group"><label>Category</label><input type="text" id="v-category"></div>
+                                <div class="form-group"><label>PR NO.</label><input type="text" id="v-prNo"></div>
+                            </div>
+                            <div class="flex-row">
+                                <div class="form-group"><label>PR Date</label><input type="date" id="v-prDate" onclick="this.showPicker()"></div>
+                                <div class="form-group"><label>RFQ</label><input type="text" id="v-rfq"></div>
+                            </div>
+                            <div class="flex-row">
+                                <div class="form-group"><label>Req. Del. Date</label><input type="date" id="v-reqDelDate" onclick="this.showPicker()"></div>
                                 <div class="form-group"><label>Company</label><input type="text" id="v-company"></div>
-                                <div class="form-group"><label>PR Number</label><input type="text" id="v-prNo"></div>
                             </div>
                             <div class="flex-row">
-                                <div class="form-group"><label>PR Date</label><input type="date" id="v-prDate"
-                                        onclick="this.showPicker()"></div>
-                                <div class="form-group"><label>Item Description</label><input type="text" id="v-desc">
-                                </div>
+                                <div class="form-group"><label>Item Code</label><input type="text" id="v-itemCode"></div>
+                                <div class="form-group"><label>Item Description</label><input type="text" id="v-desc"></div>
                             </div>
                             <div class="flex-row">
-                                <div class="form-group"><label>Quantity (TO)</label><input type="number" id="v-qty">
-                                </div>
-                                <div class="form-group"><label>Req. Del. Date</label><input type="date"
-                                        id="v-reqDelDate" onclick="this.showPicker()"></div>
-                            </div>
-                            <div class="flex-row">
-                                <div class="form-group"><label>Buyer Email</label><input type="email" id="v-buyerEmail">
-                                </div>
-                                <div class="form-group" style="display:none;"></div>
+                                <div class="form-group"><label>Lead Time</label><input type="number" id="v-leadTime"></div>
+                                <div class="form-group"><label>BuyerEmail</label><input type="email" id="v-buyerEmail"></div>
                             </div>
                         </div>
                     </details>
@@ -455,32 +454,32 @@
                         <summary>📦 Phase 1: Production & Core Data</summary>
                         <div class="details-content">
                             <div class="flex-row">
-                                <div class="form-group"><label>Supplier</label><input type="text" id="v-supplier"></div>
-                                <div class="form-group"><label>Vendor Email</label><input type="email"
-                                        id="v-vendorEmail"></div>
+                                <div class="form-group"><label>PO NO.</label><input type="text" id="v-poNo"></div>
+                                <div class="form-group"><label>PO Date</label><input type="date" id="v-poDate" onclick="this.showPicker()"></div>
                             </div>
                             <div class="flex-row">
-                                <div class="form-group"><label>PO Number</label><input type="text" id="v-poNo"></div>
-                                <div class="form-group"><label>PO Issuance Date</label><input type="date"
-                                        id="v-poIssDate" onclick="this.showPicker()"></div>
+                                <div class="form-group"><label>PO Issuance Date</label><input type="date" id="v-poIssDate" onclick="this.showPicker()"></div>
+                                <div class="form-group"><label>PO Approval Date</label><input type="date" id="v-poApprDate" onclick="this.showPicker()"></div>
                             </div>
                             <div class="flex-row">
-                                <div class="form-group"><label>PO Appr Date</label><input type="date" id="v-poApprDate"
-                                        onclick="this.showPicker()"></div>
-                                <div class="form-group"><label>Target Lead Time (Days)</label><input type="number"
-                                        id="v-leadTime">
-                                </div>
+                                <div class="form-group"><label>VendorID</label><input type="text" id="v-vendorId"></div>
+                                <div class="form-group"><label>Vendor</label><input type="text" id="v-supplier"></div>
                             </div>
                             <div class="flex-row">
-                                <div class="form-group"><label>Incoterm / Del. Term</label><select id="v-delTerm">
-                                        <option value="">-- Select --</option>
-                                    </select></div>
-                                <div class="form-group"><label>PI Number</label><input type="text" id="v-piNo"></div>
+                                <div class="form-group"><label>PI NO.</label><input type="text" id="v-piNo"></div>
+                                <div class="form-group"><label>Quantity</label><input type="number" id="v-qty"></div>
                             </div>
                             <div class="flex-row">
-                                <div class="form-group"><label>Est Readiness Date</label><input type="date"
-                                        id="v-estReadiness" onclick="this.showPicker()"></div>
-                                <div class="form-group" style="display:none;"></div>
+                                <div class="form-group"><label>Unit</label><input type="text" id="v-unit"></div>
+                                <div class="form-group"><label>FOB Price</label><input type="text" id="v-fob"></div>
+                            </div>
+                            <div class="flex-row">
+                                <div class="form-group"><label>CIF Price</label><input type="text" id="v-cif"></div>
+                                <div class="form-group"><label>Value</label><input type="text" id="v-value"></div>
+                            </div>
+                            <div class="flex-row">
+                                <div class="form-group"><label>Currency</label><input type="text" id="v-currency"></div>
+                                <div class="form-group"><label>VendorEmail</label><input type="email" id="v-vendorEmail"></div>
                             </div>
                         </div>
                     </details>
@@ -489,48 +488,28 @@
                         <summary>🚢 Phase 2: Pre-Transit / Shipping Docs</summary>
                         <div class="details-content">
                             <div class="flex-row">
-                                <div class="form-group"><label>Bank Name</label><select id="v-bank">
-                                        <option value="">-- Select --</option>
-                                    </select></div>
-                                <div class="form-group"><label>Bank/Payment Date</label><input type="date"
-                                        id="v-bankDate" onclick="this.showPicker()"></div>
+                                <div class="form-group"><label>Production Date</label><input type="date" id="v-productionDate" onclick="this.showPicker()"></div>
+                                <div class="form-group"><label>Est. Readiness Date</label><input type="date" id="v-estReadiness" onclick="this.showPicker()"></div>
                             </div>
                             <div class="flex-row">
-                                <div class="form-group"><label>Containers (No.)</label><input type="number"
-                                        id="v-containers"></div>
-                                <div class="form-group"><label>Container Type</label><input type="text"
-                                        id="v-containerType"></div>
+                                <div class="form-group"><label>Payment Term</label><input type="text" id="v-payTerm"></div>
+                                <div class="form-group"><label>ACID</label><input type="text" id="v-acid"></div>
                             </div>
                             <div class="flex-row">
-                                <div class="form-group"><label>ETD (Actual)</label><input type="date" id="v-etd"
-                                        onchange="syncBinding('v-urgent-etd', this.value)" onclick="this.showPicker()">
-                                </div>
-                                <div class="form-group"><label>ETA</label><input type="date" id="v-eta"
-                                        onchange="syncBinding('v-urgent-eta', this.value)" onclick="this.showPicker()">
-                                </div>
+                                <div class="form-group"><label>Incoterm / Delivery Term</label><input type="text" id="v-delTerm"></div>
+                                <div class="form-group"><label>Shipment NO.</label><input type="text" id="v-shipmentNo"></div>
                             </div>
                             <div class="flex-row">
-                                <div class="form-group"><label>BL Number</label><input type="text" id="v-blNo"></div>
-                                <div class="form-group"><label>ACID Number</label><input type="text" id="v-acid"></div>
+                                <div class="form-group"><label>Commercial INVOICE</label><input type="text" id="v-commInv"></div>
+                                <div class="form-group"><label>BL</label><input type="text" id="v-blNo"></div>
                             </div>
                             <div class="flex-row">
-                                <div class="form-group"><label>Value</label><input type="number" id="v-value"></div>
-                                <div class="form-group"><label>Currency</label><select id="v-currency">
-                                        <option value="">-- Select --</option>
-                                    </select></div>
+                                <div class="form-group"><label>ETD</label><input type="date" id="v-etd" onclick="this.showPicker()"></div>
+                                <div class="form-group"><label>ETA</label><input type="date" id="v-eta" onclick="this.showPicker()"></div>
                             </div>
                             <div class="flex-row">
-                                <div class="form-group"><label>Payment Term</label><select id="v-payTerm">
-                                        <option value="">-- Select --</option>
-                                    </select></div>
-                                <div class="form-group"><label>Comm Invoice Number</label><input type="text"
-                                        id="v-commInv"></div>
-                            </div>
-                            <div class="flex-row">
-                                <div class="form-group"><label>FOB Price (Optional)</label><input type="number"
-                                        id="v-fob"></div>
-                                <div class="form-group"><label>CIF Price (Optional)</label><input type="number"
-                                        id="v-cif"></div>
+                                <div class="form-group"><label>No. of Containers</label><input type="number" id="v-containers"></div>
+                                <div class="form-group"><label>Container Type</label><input type="text" id="v-containerType"></div>
                             </div>
                         </div>
                     </details>
@@ -538,10 +517,25 @@
                     <details id="det-clearance">
                         <summary>🛃 Phase 3: Port & Customs Clearance</summary>
                         <div class="details-content">
-                            <div class="form-group"><label>Doc Arrival at Port</label><input type="date"
-                                    id="v-docArrival" onclick="this.showPicker()"></div>
-                            <div class="form-group"><label>Shipment Release Date</label><input type="date"
-                                    id="v-shipRelease" onclick="this.showPicker()"></div>
+                            <div class="flex-row">
+                                <div class="form-group"><label>Courier NO.</label><input type="text" id="v-courierNo"></div>
+                                <div class="form-group"><label>Courier Date</label><input type="date" id="v-courierDate" onclick="this.showPicker()"></div>
+                            </div>
+                            <div class="flex-row">
+                                <div class="form-group"><label>Bank Name</label><input type="text" id="v-bank"></div>
+                                <div class="form-group"><label>Bank/Payment Date</label><input type="date" id="v-bankDate" onclick="this.showPicker()"></div>
+                            </div>
+                            <div class="flex-row">
+                                <div class="form-group"><label>LC</label><input type="text" id="v-lc"></div>
+                                <div class="form-group"><label>Shipment Release Date</label><input type="date" id="v-shipRelease" onclick="this.showPicker()"></div>
+                            </div>
+                            <div class="flex-row">
+                                <div class="form-group"><label>Origin</label><input type="text" id="v-origin"></div>
+                                <div class="form-group"><label>Port</label><input type="text" id="v-port"></div>
+                            </div>
+                            <div class="flex-row">
+                                <div class="form-group" style="flex: 1;"><label>Comments</label><textarea id="v-comments" rows="3" style="width:100%; border-radius: 8px; border: 1px solid var(--border); padding: 8px;"></textarea></div>
+                            </div>
                         </div>
                     </details>
 
@@ -552,8 +546,7 @@
 
                     <div class="flex-row" style="margin-top: 15px;">
                         <button class="btn" style="background-color: #6366f1; color: white;"
-                            onclick="autoFillDevMode()">ðŸ§ª
-                            Auto-Fill</button>
+                            onclick="autoFillDevMode()">🧪 Auto-Fill</button>
                         <button class="btn secondary" onclick="submitData(false)">💾 Save</button>
                         <button class="btn success" id="btn-advance" onclick="handleAdvanceClick()">ðŸš€
                             Advance</button>
@@ -1418,10 +1411,10 @@
                     };
 
                     let reqFields = [];
-                    if (currentState === "Initiated Order") reqFields = ['v-company', 'v-prNo', 'v-prDate', 'v-desc', 'v-qty', 'v-reqDelDate', 'v-buyerEmail'];
-                    else if (currentState === "In Production") reqFields = ['v-supplier', 'v-poNo', 'v-delTerm', 'v-leadTime', 'v-vendorEmail', 'v-poIssDate', 'v-poApprDate'];
-                    else if (currentState === "In Transit") reqFields = ['v-etd', 'v-blNo', 'v-acid', 'v-commInv'];
-                    else if (currentState === "Under Clearance") reqFields = ['v-shipRelease'];
+                    if (currentState === "Initiated Order") reqFields = ['v-category', 'v-prNo', 'v-prDate', 'v-rfq', 'v-reqDelDate', 'v-company', 'v-itemCode', 'v-desc', 'v-leadTime', 'v-buyerEmail'];
+                    else if (currentState === "In Production") reqFields = ['v-poNo', 'v-poDate', 'v-poIssDate', 'v-poApprDate', 'v-vendorId', 'v-supplier', 'v-piNo', 'v-qty', 'v-unit', 'v-fob', 'v-cif', 'v-value', 'v-currency', 'v-vendorEmail'];
+                    else if (currentState === "In Transit") reqFields = ['v-productionDate', 'v-estReadiness', 'v-payTerm', 'v-acid', 'v-delTerm', 'v-shipmentNo', 'v-commInv', 'v-blNo', 'v-etd', 'v-eta', 'v-containers', 'v-containerType'];
+                    else if (currentState === "Under Clearance") reqFields = ['v-courierNo', 'v-courierDate', 'v-bank', 'v-bankDate', 'v-lc', 'v-shipRelease', 'v-origin', 'v-port'];
 
                     reqFields.forEach(id => {
                         let el = document.getElementById(id);
@@ -1440,10 +1433,10 @@
 
                 function validatePhaseAdvancement(nextState) {
                     let requiredFields = [];
-                    if (nextState === "In Production") requiredFields = ['v-company', 'v-prNo', 'v-prDate', 'v-desc', 'v-qty', 'v-reqDelDate', 'v-buyerEmail'];
-                    else if (nextState === "In Transit") requiredFields = ['v-supplier', 'v-poNo', 'v-delTerm', 'v-leadTime'];
-                    else if (nextState === "Under Clearance") requiredFields = ['v-etd', 'v-blNo', 'v-acid', 'v-commInv'];
-                    else if (nextState === "Completed") requiredFields = ['v-shipRelease'];
+                    if (nextState === "In Production") requiredFields = ['v-category', 'v-prNo', 'v-prDate', 'v-rfq', 'v-reqDelDate', 'v-company', 'v-itemCode', 'v-desc', 'v-leadTime', 'v-buyerEmail'];
+                    else if (nextState === "In Transit") requiredFields = ['v-poNo', 'v-poDate', 'v-poIssDate', 'v-poApprDate', 'v-vendorId', 'v-supplier', 'v-piNo', 'v-qty', 'v-unit', 'v-fob', 'v-cif', 'v-value', 'v-currency', 'v-vendorEmail'];
+                    else if (nextState === "Under Clearance") requiredFields = ['v-productionDate', 'v-estReadiness', 'v-payTerm', 'v-acid', 'v-delTerm', 'v-shipmentNo', 'v-commInv', 'v-blNo', 'v-etd', 'v-eta', 'v-containers', 'v-containerType'];
+                    else if (nextState === "Completed") requiredFields = ['v-courierNo', 'v-courierDate', 'v-bank', 'v-bankDate', 'v-lc', 'v-shipRelease', 'v-origin', 'v-port'];
 
                     let missing = [];
                     for (let i = 0; i < requiredFields.length; i++) {
