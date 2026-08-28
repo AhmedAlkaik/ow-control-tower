@@ -1009,15 +1009,17 @@
                         await Excel.run(async (context) => {
                             const sheet = context.workbook.worksheets.getItem("Tracker");
 
-                            const mappings = {
-                                'state': 1, 'prNo': 2, 'prDate': 3, 'poNo': 5, 'poIssDate': 7,
-                                'poApprDate': 8, 'reqDelDate': 9, 'company': 10, 'supplier': 12,
-                                'piNo': 13, 'desc': 15, 'qty': 16, 'fob': 19, 'cif': 20, 'value': 21,
-                                'currency': 22, 'payTerm': 24, 'acid': 25, 'delTerm': 26,
-                                'commInv': 28, 'blNo': 29, 'etd': 30, 'eta': 31, 'shipRelease': 34,
+                                                        const mappings = {
+                                'category': 0, 'state': 1, 'prNo': 2, 'prDate': 3, 'rfq': 4,
+                                'poNo': 5, 'poDate': 6, 'poIssDate': 7, 'poApprDate': 8, 'reqDelDate': 9,
+                                'company': 10, 'vendorId': 11, 'supplier': 12, 'piNo': 13, 'itemCode': 14,
+                                'desc': 15, 'qty': 16, 'piQty': 17, 'unit': 18, 'fob': 19, 'cif': 20,
+                                'value': 21, 'currency': 22, 'productionDate': 23, 'payTerm': 24,
+                                'acid': 25, 'delTerm': 26, 'shipmentNo': 27, 'commInv': 28, 'blNo': 29,
+                                'etd': 30, 'eta': 31, 'courierNo': 32, 'courierDate': 33, 'shipRelease': 34,
                                 'containers': 35, 'containerType': 36, 'bank': 37, 'bankDate': 38,
-                                'estReadiness': 39, 'leadTime': 41, 'vendorEmail': 43,
-                                'buyerEmail': 44, 'comments': 47
+                                'estReadiness': 39, 'lc': 40, 'leadTime': 41, 'grDate': 42,
+                                'vendorEmail': 43, 'buyerEmail': 44, 'origin': 45, 'port': 46, 'comments': 47
                             };
 
                             let targetRowIdx = -1;
@@ -1136,39 +1138,54 @@
                         piNo: formatIfDate(data[13]),
                         delTerm: formatIfDate(data[26]),
                         colorConfig: getStateColorConfig(stateStr),
-                        rawObj: {
+                                                rawObj: {
+                            category: formatIfDate(data[0]),
                             state: formatIfDate(data[1]),
                             prNo: formatIfDate(data[2]),
                             prDate: formatIfDate(data[3]),
+                            rfq: formatIfDate(data[4]),
                             poNo: formatIfDate(data[5]),
+                            poDate: formatIfDate(data[6]),
                             poIssDate: formatIfDate(data[7]),
                             poApprDate: formatIfDate(data[8]),
                             reqDelDate: formatIfDate(data[9]),
                             company: formatIfDate(data[10]),
+                            vendorId: formatIfDate(data[11]),
                             supplier: formatIfDate(data[12]),
                             piNo: formatIfDate(data[13]),
+                            itemCode: formatIfDate(data[14]),
                             desc: formatIfDate(data[15]),
                             qty: formatIfDate(data[16]),
+                            piQty: formatIfDate(data[17]),
+                            unit: formatIfDate(data[18]),
                             fob: formatIfDate(data[19]),
                             cif: formatIfDate(data[20]),
                             value: formatIfDate(data[21]),
                             currency: formatIfDate(data[22]),
+                            productionDate: formatIfDate(data[23]),
                             payTerm: formatIfDate(data[24]),
                             acid: formatIfDate(data[25]),
                             delTerm: formatIfDate(data[26]),
+                            shipmentNo: formatIfDate(data[27]),
                             commInv: formatIfDate(data[28]),
                             blNo: formatIfDate(data[29]),
                             etd: formatIfDate(data[30]),
                             eta: formatIfDate(data[31]),
+                            courierNo: formatIfDate(data[32]),
+                            courierDate: formatIfDate(data[33]),
                             shipRelease: formatIfDate(data[34]),
                             containers: formatIfDate(data[35]),
                             containerType: formatIfDate(data[36]),
                             bank: formatIfDate(data[37]),
                             bankDate: formatIfDate(data[38]),
                             estReadiness: formatIfDate(data[39]),
+                            lc: formatIfDate(data[40]),
                             leadTime: formatIfDate(data[41]),
+                            grDate: formatIfDate(data[42]),
                             vendorEmail: formatIfDate(data[43]),
                             buyerEmail: formatIfDate(data[44]) || localStorage.getItem('ow_current_user') || "",
+                            origin: formatIfDate(data[45]),
+                            port: formatIfDate(data[46]),
                             comments: formatIfDate(data[47])
                         }
                     };
@@ -1261,16 +1278,20 @@
                 });
 
                 function hydrateInputs(data, forceWipe) {
-                    const map = {
-                        'v-company': 'company', 'v-prNo': 'prNo', 'v-prDate': 'prDate', 'v-desc': 'desc',
-                        'v-qty': 'qty', 'v-supplier': 'supplier', 'v-vendorEmail': 'vendorEmail', 'v-buyerEmail': 'buyerEmail',
-                        'v-poNo': 'poNo', 'v-poIssDate': 'poIssDate', 'v-poApprDate': 'poApprDate', 'v-leadTime': 'leadTime',
-                        'v-value': 'value', 'v-currency': 'currency', 'v-payTerm': 'payTerm', 'v-delTerm': 'delTerm',
-                        'v-reqDelDate': 'reqDelDate', 'v-piNo': 'piNo', 'v-estReadiness': 'estReadiness',
-                        'v-bank': 'bank', 'v-bankDate': 'bankDate', 'v-containers': 'containers',
-                        'v-containerType': 'containerType', 'v-etd': 'etd', 'v-urgent-etd': 'etd', 'v-blNo': 'blNo', 'v-acid': 'acid',
-                        'v-commInv': 'commInv', 'v-fob': 'fob', 'v-cif': 'cif',
-                        'v-shipRelease': 'shipRelease', 'v-eta': 'eta', 'v-urgent-eta': 'eta', 'v-comments': 'comments'
+                                        const map = {
+                        'v-category': 'category', 'v-prNo': 'prNo', 'v-prDate': 'prDate', 'v-rfq': 'rfq',
+                        'v-poNo': 'poNo', 'v-poDate': 'poDate', 'v-poIssDate': 'poIssDate', 'v-poApprDate': 'poApprDate',
+                        'v-reqDelDate': 'reqDelDate', 'v-company': 'company', 'v-vendorId': 'vendorId',
+                        'v-supplier': 'supplier', 'v-piNo': 'piNo', 'v-itemCode': 'itemCode', 'v-desc': 'desc',
+                        'v-qty': 'qty', 'v-unit': 'unit', 'v-fob': 'fob', 'v-cif': 'cif',
+                        'v-value': 'value', 'v-currency': 'currency', 'v-productionDate': 'productionDate',
+                        'v-payTerm': 'payTerm', 'v-acid': 'acid', 'v-delTerm': 'delTerm', 'v-shipmentNo': 'shipmentNo',
+                        'v-commInv': 'commInv', 'v-blNo': 'blNo', 'v-etd': 'etd', 'v-eta': 'eta',
+                        'v-courierNo': 'courierNo', 'v-courierDate': 'courierDate', 'v-shipRelease': 'shipRelease',
+                        'v-containers': 'containers', 'v-containerType': 'containerType', 'v-bank': 'bank',
+                        'v-bankDate': 'bankDate', 'v-estReadiness': 'estReadiness', 'v-lc': 'lc',
+                        'v-leadTime': 'leadTime', 'v-vendorEmail': 'vendorEmail', 'v-buyerEmail': 'buyerEmail',
+                        'v-origin': 'origin', 'v-port': 'port', 'v-comments': 'comments'
                     };
 
                     for (let [id, key] of Object.entries(map)) {
