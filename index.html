@@ -385,8 +385,7 @@
                         <label
                             style="font-size: 0.7rem; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; gap: 4px; background: #f8fafc; padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border);">
                             <input type="checkbox" id="edit-mode-toggle"
-                                onchange="document.body.classList.toggle('edit-mode', this.checked)">
-                            âœï¸ Edit All
+                                onchange="document.body.classList.toggle('edit-mode', this.checked)">✏️ Edit All
                         </label>
                     </div>
                 </div>
@@ -426,7 +425,7 @@
                     </div>
 
                     <details id="det-req">
-                        <summary>ðŸ“‹ Phase 0: Initiated Order (Pre-PO)</summary>
+                        <summary>📋 Phase 0: Initiated Order (Pre-PO)</summary>
                         <div class="details-content">
                             <div class="flex-row">
                                 <div class="form-group"><label>Company</label><input type="text" id="v-company"></div>
@@ -453,7 +452,7 @@
                     </details>
 
                     <details id="det-prod">
-                        <summary>ðŸ“¦ Phase 1: Production & Core Data</summary>
+                        <summary>📦 Phase 1: Production & Core Data</summary>
                         <div class="details-content">
                             <div class="flex-row">
                                 <div class="form-group"><label>Supplier</label><input type="text" id="v-supplier"></div>
@@ -487,7 +486,7 @@
                     </details>
 
                     <details id="det-transit">
-                        <summary>ðŸš¢ Phase 2: Pre-Transit / Shipping Docs</summary>
+                        <summary>🚢 Phase 2: Pre-Transit / Shipping Docs</summary>
                         <div class="details-content">
                             <div class="flex-row">
                                 <div class="form-group"><label>Bank Name</label><select id="v-bank">
@@ -537,7 +536,7 @@
                     </details>
 
                     <details id="det-clearance">
-                        <summary>ðŸ›ƒ Phase 3: Port & Customs Clearance</summary>
+                        <summary>🛃 Phase 3: Port & Customs Clearance</summary>
                         <div class="details-content">
                             <div class="form-group"><label>Doc Arrival at Port</label><input type="date"
                                     id="v-docArrival" onclick="this.showPicker()"></div>
@@ -555,12 +554,12 @@
                         <button class="btn" style="background-color: #6366f1; color: white;"
                             onclick="autoFillDevMode()">ðŸ§ª
                             Auto-Fill</button>
-                        <button class="btn secondary" onclick="submitData(false)">ðŸ’¾ Save</button>
+                        <button class="btn secondary" onclick="submitData(false)">💾 Save</button>
                         <button class="btn success" id="btn-advance" onclick="handleAdvanceClick()">ðŸš€
                             Advance</button>
                     </div>
                     <button class="btn" style="background-color: #ef4444; color: white; width: 100%; margin-top: 10px;"
-                        onclick="archiveOrder()">ðŸ—‘ï¸ Terminate / Archive Order</button>
+                        onclick="archiveOrder()">🗑️ Terminate / Archive Order</button>
                 </div>
 
 
@@ -1239,14 +1238,14 @@
                         document.getElementById('app-body').style.display = 'none';
                         let msg = document.getElementById('completed-msg');
                         msg.style.display = 'block';
-                        msg.innerHTML = "âœ… This order is Completed. No further actions required.";
+                        msg.innerHTML = "✅ This order is Completed. No further actions required.";
                         msg.style.color = "var(--success)";
                         return;
                     } else if (safeState === "Archived") {
                         document.getElementById('app-body').style.display = 'none';
                         let msg = document.getElementById('completed-msg');
                         msg.style.display = 'block';
-                        msg.innerHTML = "ðŸ—‘ï¸ This order has been Cancelled / Archived.";
+                        msg.innerHTML = "🗑️ This order has been Cancelled / Archived.";
                         msg.style.color = "var(--text-muted)";
                         return;
                     }
@@ -1376,7 +1375,7 @@
                     const btn = document.getElementById('btn-advance');
                     if (!btn) return;
                     let btnConfig = {
-                        "Initiated Order": { label: "ðŸš€ Advance to IN PRODUCTION", next: "In Production" },
+                        "Initiated Order": { label: "🚀 Advance to IN PRODUCTION", next: "In Production" },
                         "In Production": { label: "ðŸš€ Advance to IN TRANSIT", next: "In Transit" },
                         "In Transit": { label: "ðŸš€ Advance to UNDER CLEARANCE", next: "Under Clearance" },
                         "Under Clearance": { label: "ðŸš€ Advance to COMPLETED", next: "Completed" }
@@ -1455,7 +1454,7 @@
                         }
                     }
                     if (missing.length > 0) {
-                        document.getElementById('error-msg').innerText = "âŒ Missing Required Data to Advance Phase: " + missing.join(", ");
+                        document.getElementById('error-msg').innerText = "❌ Missing Required Data to Advance Phase: " + missing.join(", ");
                         return false;
                     }
                     return true;
@@ -1513,7 +1512,7 @@
                 }
 
                 async function archiveOrder() {
-                    if (!confirm("âš ï¸ Are you sure you want to Archive/Cancel this order?")) return;
+                    if (!confirm("⚠️ Are you sure you want to Archive/Cancel this order?")) return;
                     Office.context.ui.messageParent(JSON.stringify({ action: "archive", poNo: currentPoNo, prNo: document.getElementById('v-prNo').value }));
                 }
 
