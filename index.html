@@ -999,11 +999,6 @@
                     initApp();
                     activePoller = setInterval(pollActiveRow, 1000);
                 });
-            
-            
-                    }
-                }
-            });
 
 
                 async function pollActiveRow() {
@@ -1391,22 +1386,26 @@
                 }
 
                 function showActionForm() {
-                    const viewDash = document.getElementById('view-dash');
-                    const viewForm = document.getElementById('view-form');
+                    try {
+                        const viewDash = document.getElementById('view-dash');
+                        const viewForm = document.getElementById('view-form');
 
-                    if (!viewForm) {
-                        onError("Error: The #view-form container is missing from the HTML. Please wrap the form UI properly.");
-                        return;
-                    }
+                        if (!viewForm) {
+                            onError("Error: The #view-form container is missing from the HTML. Please wrap the form UI properly.");
+                            return;
+                        }
 
-                    viewDash.style.display = 'none';
-                    viewForm.style.display = 'block';
+                        if (viewDash) viewDash.style.display = 'none';
+                        viewForm.style.display = 'block';
 
-                    // Use the globally stored row data, or default to empty if a new row
-                    if (lastRowIdx > 0 && currentRowData.length > 0) {
-                        processRowSelection(lastRowIdx + 1, currentRowData);
-                    } else {
-                        processRowSelection(-1, new Array(48).fill(""));
+                        // Use the globally stored row data, or default to empty if a new row
+                        if (lastRowIdx > 0 && currentRowData && currentRowData.length > 0) {
+                            processRowSelection(lastRowIdx + 1, currentRowData);
+                        } else {
+                            processRowSelection(-1, new Array(48).fill(""));
+                        }
+                    } catch (err) {
+                        onError("Crash inside showActionForm: " + err.message);
                     }
                 }
 
@@ -1414,11 +1413,7 @@
                     document.getElementById('view-form').style.display = 'none';
                     document.getElementById('view-dash').style.display = 'block';
                 } function closeActionForm() { document.getElementById("dashboard-view").style.display = "block"; document.getElementById("action-view").style.display = "none"; }
-                dialog = asyncResult.value;
-                dialog.addEventHandler(Office.EventType.DialogMessageReceived, processMessage);
-                    }
-                );
-            }
+
 
                 async function processMessage(arg) {
                     let payloadStr = arg.message;
