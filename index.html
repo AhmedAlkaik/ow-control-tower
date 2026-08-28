@@ -261,6 +261,10 @@
             color: var(--primary);
             border-bottom: 3px solid var(--primary);
         }
+            body.edit-mode .form-group { display: block !important; }
+        body.edit-mode .flex-row { display: flex !important; }
+        details { transition: all 0.3s ease; }
+        body.edit-mode details { display: block !important; }
     </style>
 </head>
 
@@ -382,11 +386,10 @@
                         <div id="ctx-state" class="status-badge" style="margin-top: 6px;">Detecting...</div>
                     </div>
                     <div style="text-align: right;">
-                        <label
-                            style="font-size: 0.7rem; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; gap: 4px; background: #f8fafc; padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border);">
-                            <input type="checkbox" id="edit-mode-toggle"
-                                onchange="document.body.classList.toggle('edit-mode', this.checked)">✏️ Edit All
-                        </label>
+                        <label style="display: flex; align-items: center; gap: 5px; font-weight: bold; color: var(--primary); font-size: 0.8rem; cursor: pointer;">
+                                <input type="checkbox" id="edit-mode-toggle"
+                                    onchange="document.body.classList.toggle('edit-mode', this.checked); document.querySelectorAll('details').forEach(d => { if(this.checked) { d.style.display='block'; d.open=true; } else { enforcePhaseIsolation(currentState, false); } })">✏️ Edit All
+                            </label>
                     </div>
                 </div>
 
