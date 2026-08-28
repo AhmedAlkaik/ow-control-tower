@@ -367,6 +367,7 @@
             let trackerDataset = [];
             let dialog = null;
             let activePoller = null;
+        let isProcessing = false;
             let lastRowIdx = -1;
 
             Office.onReady((info) => {
@@ -375,6 +376,7 @@
             });
 
             async function pollActiveRow() {
+            if (isProcessing) return;
                 try {
                     await Excel.run(async (context) => {
                         const sheet = context.workbook.worksheets.getItemOrNullObject("Tracker");
