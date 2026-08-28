@@ -345,7 +345,8 @@
         </div>
 
         <div class="flex-row" style="margin-top: 15px;">
-            <button class="btn" style="background-color: #6366f1; color: white;" onclick="autoFillDevMode()">🧪 Auto-Fill</button>
+            <button class="btn" style="background-color: #6366f1; color: white;" onclick="autoFillDevMode()">🧪
+                Auto-Fill</button>
             <button class="btn secondary" onclick="submitData(false)">💾 Save</button>
             <button class="btn success" id="btn-advance" onclick="handleAdvanceClick()">🚀 Advance</button>
         </div>
@@ -562,7 +563,7 @@
                 if (!el) continue;
                 // IGNORE HYDRATION IF USER IS ACTIVELY TYPING IN IT
                 if (el.classList.contains('dirty-input')) continue;
-                
+
                 if (data[key] !== undefined) {
                     let sheetVal = String(data[key] || "");
                     if (el.tagName === 'SELECT' && sheetVal) {
@@ -668,18 +669,18 @@
             }
         }
 
-        
+
         function autoFillDevMode() {
             const dataMap = {
                 'v-company': 'OWC',
-                'v-prNo': 'TEST-' + Math.floor(Math.random()*10000),
+                'v-prNo': 'TEST-' + Math.floor(Math.random() * 10000),
                 'v-prDate': '2026-08-01',
                 'v-desc': 'Dev Test Item',
                 'v-qty': '1000',
                 'v-reqDelDate': '2026-09-01',
                 'v-supplier': 'Global AutoFill Ltd',
                 'v-vendorEmail': 'vendor@test.com',
-                'v-poNo': 'PO-' + Math.floor(Math.random()*100000),
+                'v-poNo': 'PO-' + Math.floor(Math.random() * 100000),
                 'v-poIssDate': '2026-08-05',
                 'v-poApprDate': '2026-08-06',
                 'v-leadTime': '30',
@@ -763,6 +764,7 @@
 
             let payload = {
                 action: (currentRow === -1) ? "create" : "update",
+                targetRow: currentRow, // Explicitly pass the active row index
                 poNo: currentPoNo,
                 prNo: currentPrNo,
                 targetState: targetState || ""

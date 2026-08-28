@@ -360,517 +360,522 @@
         </div>
 
         <script>
-                        
-    
 
-        let currentBuyerFilter = "ALL";
-        let trackerDataset = [];
-        let dialog = null;
-        let activePoller = null;
-        let lastRowIdx = -1;
 
-        Office.onReady((info) => {
-            initApp();
-            activePoller = setInterval(pollActiveRow, 1000);
-        });
 
-        async function pollActiveRow() {
-            try {
-                await Excel.run(async (context) => {
-                    const sheet = context.workbook.worksheets.getItemOrNullObject("Tracker");
-                    await context.sync();
-                    if (sheet.isNullObject) return;
+            let currentBuyerFilter = "ALL";
+            let trackerDataset = [];
+            let dialog = null;
+            let activePoller = null;
+            let lastRowIdx = -1;
 
-                    const activeCell = context.workbook.getActiveCell();
-                    activeCell.load("rowIndex");
-                    await context.sync();
-                    
-                    let r = activeCell.rowIndex;
-                    if (r === lastRowIdx) return;
-                    lastRowIdx = r;
-                    
-                    if (r === 0) {
-                        localStorage.setItem('ow_ctx_live', JSON.stringify({ rowIdx: 0, raw: new Array(36).fill(""), state: "" }));
-                        return;
-                    }
-                    
-                    let range = sheet.getRangeByIndexes(r, 0, 1, 36);
-                    range.load("values");
-                    await context.sync();
-                    
-                    let data = range.values[0];
-                    let state = data[32] || "Initiated Order";
-                    // If row is totally blank
-                    if (!data[1] && !data[2] && !data[3]) state = "Initiated Order";
-                    
-                    localStorage.setItem('ow_ctx_live', JSON.stringify({
-                        rowIdx: r + 1,
-                        state: state,
-                        raw: data
-                    }));
-                });
-            } catch (err) {
-                // Background poll might fail if user is typing
-            }
-        }
+            Office.onReady((info) => {
+                initApp();
+                activePoller = setInterval(pollActiveRow, 1000);
+            });
 
-        async function syncRowColors(silent = true) {
-            try {
-                await Excel.run(async (context) => {
-                    const sheet = context.workbook.worksheets.getItem("Tracker");
-                    const range = sheet.getUsedRange();
-                    range.load(["values", "rowCount"]);
-                    await context.sync();
-                    
-                    let rowCount = range.rowCount;
-                    let values = range.values;
-                    
-                    for (let i = 1; i < rowCount; i++) {
-                        let state = values[i][32];
-                        let bg = '#ffffff'; // default
-                        
-                        if (state === "In Transit") bg = '#d0e3ff';
-                        else if (state === "Under Clearance") bg = '#fef7e0';
-                        else if (state === "Completed") bg = '#bdf4cb';
-                        else if (state === "Initiated Order") bg = '#f3e8ff';
-                        else if (state === "Archived") bg = '#f1f5f9';
-                        else if (state === "In Production") bg = '#fffbeb';
-                        
-                        // We format the whole row matching active data bounds
-                        let rowRange = sheet.getRangeByIndexes(i, 0, 1, 36);
-                        rowRange.format.fill.color = bg;
-                    }
-                    await context.sync();
-                });
-            } catch(e) {}
-        }
-
-        async function initApp() {
-            showLoading(true);
-            try {
-                let userEmail = "test.buyer@orientalweavers.com";
+            async function pollActiveRow() {
                 try {
-                    if (Office.context.userProfile && Office.context.userProfile.emailAddress) {
-                       userEmail = Office.context.userProfile.emailAddress;
-                    }
-                } catch(e) {}
-                localStorage.setItem('ow_current_user', userEmail);
-                
-                await Excel.run(async (context) => {
-                    const sheet = context.workbook.worksheets.getItemOrNullObject("Tracker");
-                    await context.sync();
-                    
-                    if (sheet.isNullObject) {
-                        showLoading(false);
-                        document.getElementById('error-msg').innerText = "Tracker sheet not found.";
-                        return;
-                    }
+                    await Excel.run(async (context) => {
+                        const sheet = context.workbook.worksheets.getItemOrNullObject("Tracker");
+                        await context.sync();
+                        if (sheet.isNullObject) return;
 
-                    const usedRange = sheet.getUsedRange();
-                    usedRange.load("values");
-                    await context.sync();
+                        const activeCell = context.workbook.getActiveCell();
+                        activeCell.load("rowIndex");
+                        await context.sync();
 
-                    trackerDataset = usedRange.values;
-                    
-                    let buyers = [];
-                    if (trackerDataset.length > 1) {
-                        for (let i = 1; i < trackerDataset.length; i++) {
-                            let b = trackerDataset[i][34];
-                            if (b && String(b).trim() !== "") {
-                                buyers.push(String(b).trim());
+                        let r = activeCell.rowIndex;
+                        if (r === lastRowIdx) return;
+                        lastRowIdx = r;
+
+                        if (r === 0) {
+                            localStorage.setItem('ow_ctx_live', JSON.stringify({ rowIdx: 0, raw: new Array(36).fill(""), state: "" }));
+                            return;
+                        }
+
+                        let range = sheet.getRangeByIndexes(r, 0, 1, 36);
+                        range.load("values");
+                        await context.sync();
+
+                        let data = range.values[0];
+                        let state = data[32] || "Initiated Order";
+                        // If row is totally blank
+                        if (!data[1] && !data[2] && !data[3]) state = "Initiated Order";
+
+                        localStorage.setItem('ow_ctx_live', JSON.stringify({
+                            rowIdx: r + 1,
+                            state: state,
+                            raw: data
+                        }));
+                    });
+                } catch (err) {
+                    // Background poll might fail if user is typing
+                }
+            }
+
+            async function syncRowColors(silent = true) {
+                try {
+                    await Excel.run(async (context) => {
+                        const sheet = context.workbook.worksheets.getItem("Tracker");
+                        const range = sheet.getUsedRange();
+                        range.load(["values", "rowCount"]);
+                        await context.sync();
+
+                        let rowCount = range.rowCount;
+                        let values = range.values;
+
+                        for (let i = 1; i < rowCount; i++) {
+                            let state = values[i][32];
+                            let bg = '#ffffff'; // default
+
+                            if (state === "In Transit") bg = '#d0e3ff';
+                            else if (state === "Under Clearance") bg = '#fef7e0';
+                            else if (state === "Completed") bg = '#bdf4cb';
+                            else if (state === "Initiated Order") bg = '#f3e8ff';
+                            else if (state === "Archived") bg = '#f1f5f9';
+                            else if (state === "In Production") bg = '#fffbeb';
+
+                            // We format the whole row matching active data bounds
+                            let rowRange = sheet.getRangeByIndexes(i, 0, 1, 36);
+                            rowRange.format.fill.color = bg;
+                        }
+                        await context.sync();
+                    });
+                } catch (e) { }
+            }
+
+            async function initApp() {
+                showLoading(true);
+                try {
+                    let userEmail = "test.buyer@orientalweavers.com";
+                    try {
+                        if (Office.context.userProfile && Office.context.userProfile.emailAddress) {
+                            userEmail = Office.context.userProfile.emailAddress;
+                        }
+                    } catch (e) { }
+                    localStorage.setItem('ow_current_user', userEmail);
+
+                    await Excel.run(async (context) => {
+                        const sheet = context.workbook.worksheets.getItemOrNullObject("Tracker");
+                        await context.sync();
+
+                        if (sheet.isNullObject) {
+                            showLoading(false);
+                            document.getElementById('error-msg').innerText = "Tracker sheet not found.";
+                            return;
+                        }
+
+                        const usedRange = sheet.getUsedRange();
+                        usedRange.load("values");
+                        await context.sync();
+
+                        trackerDataset = usedRange.values;
+
+                        let buyers = [];
+                        if (trackerDataset.length > 1) {
+                            for (let i = 1; i < trackerDataset.length; i++) {
+                                let b = trackerDataset[i][34];
+                                if (b && String(b).trim() !== "") {
+                                    buyers.push(String(b).trim());
+                                }
                             }
                         }
-                    }
-                    buyers = [...new Set(buyers)].sort();
+                        buyers = [...new Set(buyers)].sort();
 
-                    const select = document.getElementById('buyer-select');
-                    select.innerHTML = '<option value="ALL">🌎 All Buyers</option>';
-                    
-                    if (buyers.length > 0) {
-                        buyers.forEach(b => {
+                        const select = document.getElementById('buyer-select');
+                        select.innerHTML = '<option value="ALL">🌎 All Buyers</option>';
+
+                        if (buyers.length > 0) {
+                            buyers.forEach(b => {
+                                let opt = document.createElement('option');
+                                opt.value = String(b);
+                                opt.text = "👤 " + String(b).split("@")[0];
+                                select.appendChild(opt);
+                            });
+                        }
+
+                        let userEmail = localStorage.getItem('ow_current_user');
+                        if (userEmail && buyers.includes(userEmail)) {
+                            select.value = userEmail;
+                        } else if (userEmail) {
                             let opt = document.createElement('option');
-                            opt.value = String(b);
-                            opt.text = "👤 " + String(b).split("@")[0];
+                            opt.value = userEmail;
+                            opt.text = "👤 " + userEmail.split("@")[0];
                             select.appendChild(opt);
-                        });
-                    }
-                    
-                    let userEmail = localStorage.getItem('ow_current_user');
-                    if (userEmail && buyers.includes(userEmail)) {
-                        select.value = userEmail;
-                    } else if (userEmail) {
-                        let opt = document.createElement('option');
-                        opt.value = userEmail;
-                        opt.text = "👤 " + userEmail.split("@")[0];
-                        select.appendChild(opt);
-                        select.value = userEmail;
-                    }
+                            select.value = userEmail;
+                        }
 
-                    currentBuyerFilter = select.value;
-                    // Automatically filter it
-                    openFilteredGrid();
-                    loadKPIsFromMemory(trackerDataset, false);
-                });
-                // syncRowColors(); // trigger background color sync
-            } catch (error) {
-                onError(error);
-            }
-        }
-
-        async function fetchTrackerData(silent = false) {
-            if (!silent) showLoading(true);
-            try {
-                await Excel.run(async (context) => {
-                    const sheet = context.workbook.worksheets.getItem("Tracker");
-                    const usedRange = sheet.getUsedRange();
-                    usedRange.load("values");
-                    await context.sync();
-                    trackerDataset = usedRange.values;
-                    loadKPIsFromMemory(trackerDataset, silent);
-                });
-                // syncRowColors();
-            } catch (error) {
-                if (!silent) onError(error);
-            }
-        }
-
-
-        function loadKPIsFromMemory(data, silent) {
-            let counts = {
-                "Initiated Order": 0,
-                "In Production": 0,
-                "In Transit": 0,
-                "Under Clearance": 0,
-                "Completed": 0,
-                "TOTAL_ACTIVE": 0
-            };
-            
-            if (data && data.length > 1) {
-                for (let i = 1; i < data.length; i++) {
-                    let state = data[i][32] || "Initiated Order";
-                    let buyer = data[i][34];
-                    
-                    if (currentBuyerFilter && currentBuyerFilter !== "ALL" && String(buyer) !== currentBuyerFilter) continue;
-                    
-                    if (state && state !== "Archived" && state !== "Closed") {
-                        counts["TOTAL_ACTIVE"]++;
-                    }
-                    if (counts[state] !== undefined) counts[state]++;
+                        currentBuyerFilter = select.value;
+                        // Automatically filter it
+                        openFilteredGrid();
+                        loadKPIsFromMemory(trackerDataset, false);
+                    });
+                    // syncRowColors(); // trigger background color sync
+                } catch (error) {
+                    onError(error);
                 }
             }
-            
-            if (!silent) showLoading(false);
-            document.getElementById('kpi-total').innerText = counts["TOTAL_ACTIVE"] || 0;
-            document.getElementById('kpi-req').innerText = counts["Initiated Order"] || 0;
-            document.getElementById('kpi-prod').innerText = counts["In Production"] || 0;
-            document.getElementById('kpi-trans').innerText = counts["In Transit"] || 0;
-            document.getElementById('kpi-clear').innerText = counts["Under Clearance"] || 0;
-            document.getElementById('kpi-comp').innerText = counts["Completed"] || 0;
-        }
 
-        function handleBuyerChange() {
-            currentBuyerFilter = document.getElementById('buyer-select').value;
-            loadKPIsFromMemory(trackerDataset, false);
-        }
-
-        async function openFilteredGrid() {
-            try {
-                await Excel.run(async (context) => {
-                    const sheet = context.workbook.worksheets.getItem("Tracker");
-                    const table = sheet.tables.getItemAt(0);
-                    
-                    if (currentBuyerFilter && currentBuyerFilter !== "ALL") {
-                        // Assuming buyer Email is column 35 (index 34)
-                        table.columns.getItemAt(34).filter.apply({
-                            filterOn: Excel.FilterOn.values,
-                            values: [currentBuyerFilter]
-                        });
-                    } else {
-                        table.clearFilters();
-                    }
-                    await context.sync();
-                });
-            } catch (err) {
-                onError("Failed to apply native filter: " + err.message);
+            async function fetchTrackerData(silent = false) {
+                if (!silent) showLoading(true);
+                try {
+                    await Excel.run(async (context) => {
+                        const sheet = context.workbook.worksheets.getItem("Tracker");
+                        const usedRange = sheet.getUsedRange();
+                        usedRange.load("values");
+                        await context.sync();
+                        trackerDataset = usedRange.values;
+                        loadKPIsFromMemory(trackerDataset, silent);
+                    });
+                    // syncRowColors();
+                } catch (error) {
+                    if (!silent) onError(error);
+                }
             }
-        }
 
-        function getStateColorConfig(state) {
-            if (state === "In Transit") return { bg: '#d0e3ff', border: '#3b82f6', text: '#1e3a8a' };
-            if (state === "Under Clearance") return { bg: '#fef7e0', border: '#f59e0b', text: '#78350f' };
-            if (state === "Completed") return { bg: '#bdf4cb', border: '#10b981', text: '#064e3b' };
-            if (state === "Initiated Order") return { bg: '#f3e8ff', border: '#8b5cf6', text: '#4c1d95' };
-            if (state === "Archived") return { bg: '#f1f5f9', border: '#94a3b8', text: '#475569' };
-            return { bg: '#ffffff', border: '#fbbf24', text: '#92400e' };
-        }
 
-        async function executeSearch(query) {
-            if (!query || query.trim() === '') return closeResults();
-            showLoading(true);
-            
-            try {
-                let data = trackerDataset; 
-                let results = [];
-                let safeQuery = query.toLowerCase().trim();
-                
-                for (let i = 1; i < data.length; i++) {
-                    let row = data[i];
-                    let state = row[32] || "Initiated Order";
-                    let buyer = row[34];
-                    if (currentBuyerFilter && currentBuyerFilter !== "ALL" && String(buyer) !== currentBuyerFilter) continue;
-                    
-                    let rowText = row.join("|").toLowerCase();
-                    if (rowText.includes(safeQuery)) {
-                        results.push({
-                            rowIdx: i + 1,
-                            state: state || "PENDING",
-                            po: row[8] || "No PO",
-                            pr: row[1] || "No PR",
-                            supplier: row[5] || "TBD Vendor",
-                            piNo: row[6] || "",
-                            blNo: row[27] || "",
-                            delTerm: row[15] || "",
-                            raw: row,
-                            colors: getStateColorConfig(state)
-                        });
-                        if (results.length > 99) break;
+            function loadKPIsFromMemory(data, silent) {
+                let counts = {
+                    "Initiated Order": 0,
+                    "In Production": 0,
+                    "In Transit": 0,
+                    "Under Clearance": 0,
+                    "Completed": 0,
+                    "TOTAL_ACTIVE": 0
+                };
+
+                if (data && data.length > 1) {
+                    for (let i = 1; i < data.length; i++) {
+                        let state = data[i][32] || "Initiated Order";
+                        let buyer = data[i][34];
+
+                        if (currentBuyerFilter && currentBuyerFilter !== "ALL" && String(buyer) !== currentBuyerFilter) continue;
+
+                        if (state && state !== "Archived" && state !== "Closed") {
+                            counts["TOTAL_ACTIVE"]++;
+                        }
+                        if (counts[state] !== undefined) counts[state]++;
                     }
                 }
-                renderResults(results);
-            } catch(error) {
-                onError(error);
+
+                if (!silent) showLoading(false);
+                document.getElementById('kpi-total').innerText = counts["TOTAL_ACTIVE"] || 0;
+                document.getElementById('kpi-req').innerText = counts["Initiated Order"] || 0;
+                document.getElementById('kpi-prod').innerText = counts["In Production"] || 0;
+                document.getElementById('kpi-trans').innerText = counts["In Transit"] || 0;
+                document.getElementById('kpi-clear').innerText = counts["Under Clearance"] || 0;
+                document.getElementById('kpi-comp').innerText = counts["Completed"] || 0;
             }
-        }
+
+            function handleBuyerChange() {
+                currentBuyerFilter = document.getElementById('buyer-select').value;
+                loadKPIsFromMemory(trackerDataset, false);
+            }
+
+            async function openFilteredGrid() {
+                try {
+                    await Excel.run(async (context) => {
+                        const sheet = context.workbook.worksheets.getItem("Tracker");
+                        const table = sheet.tables.getItemAt(0);
+
+                        if (currentBuyerFilter && currentBuyerFilter !== "ALL") {
+                            // Assuming buyer Email is column 35 (index 34)
+                            table.columns.getItemAt(34).filter.apply({
+                                filterOn: Excel.FilterOn.values,
+                                values: [currentBuyerFilter]
+                            });
+                        } else {
+                            table.clearFilters();
+                        }
+                        await context.sync();
+                    });
+                } catch (err) {
+                    onError("Failed to apply native filter: " + err.message);
+                }
+            }
+
+            function getStateColorConfig(state) {
+                if (state === "In Transit") return { bg: '#d0e3ff', border: '#3b82f6', text: '#1e3a8a' };
+                if (state === "Under Clearance") return { bg: '#fef7e0', border: '#f59e0b', text: '#78350f' };
+                if (state === "Completed") return { bg: '#bdf4cb', border: '#10b981', text: '#064e3b' };
+                if (state === "Initiated Order") return { bg: '#f3e8ff', border: '#8b5cf6', text: '#4c1d95' };
+                if (state === "Archived") return { bg: '#f1f5f9', border: '#94a3b8', text: '#475569' };
+                return { bg: '#ffffff', border: '#fbbf24', text: '#92400e' };
+            }
+
+            async function executeSearch(query) {
+                if (!query || query.trim() === '') return closeResults();
+                showLoading(true);
+
+                try {
+                    let data = trackerDataset;
+                    let results = [];
+                    let safeQuery = query.toLowerCase().trim();
+
+                    for (let i = 1; i < data.length; i++) {
+                        let row = data[i];
+                        let state = row[32] || "Initiated Order";
+                        let buyer = row[34];
+                        if (currentBuyerFilter && currentBuyerFilter !== "ALL" && String(buyer) !== currentBuyerFilter) continue;
+
+                        let rowText = row.join("|").toLowerCase();
+                        if (rowText.includes(safeQuery)) {
+                            results.push({
+                                rowIdx: i + 1,
+                                state: state || "PENDING",
+                                po: row[8] || "No PO",
+                                pr: row[1] || "No PR",
+                                supplier: row[5] || "TBD Vendor",
+                                piNo: row[6] || "",
+                                blNo: row[27] || "",
+                                delTerm: row[15] || "",
+                                raw: row,
+                                colors: getStateColorConfig(state)
+                            });
+                            if (results.length > 99) break;
+                        }
+                    }
+                    renderResults(results);
+                } catch (error) {
+                    onError(error);
+                }
+            }
 
 
-        async function applyFilter(stateFilter) {
-            document.getElementById('global-search').value = '';
-            showLoading(true);
-            try {
-                // Apply excel native row-hiding!
-                await Excel.run(async (context) => {
-                    const sheet = context.workbook.worksheets.getItem("Tracker");
-                    const usedRange = sheet.getUsedRange();
-                    usedRange.load(["rowCount", "values"]);
-                    await context.sync();
-                    
-                    for (let i = 1; i < usedRange.rowCount; i++) {
-                        let state = usedRange.values[i][32] || "Initiated Order";
-                        let rowRange = sheet.getRangeByIndexes(i, 0, 1, 36);
-                        
+            async function applyFilter(stateFilter) {
+                document.getElementById('global-search').value = '';
+                showLoading(true);
+                try {
+                    // Apply excel native row-hiding!
+                    await Excel.run(async (context) => {
+                        const sheet = context.workbook.worksheets.getItem("Tracker");
+                        const usedRange = sheet.getUsedRange();
+                        usedRange.load(["rowCount", "values"]);
+                        await context.sync();
+
+                        for (let i = 1; i < usedRange.rowCount; i++) {
+                            let state = usedRange.values[i][32] || "Initiated Order";
+                            let rowRange = sheet.getRangeByIndexes(i, 0, 1, 36);
+
+                            let match = false;
+                            if (stateFilter === "ALL" && state !== "Archived" && state !== "Closed" && state) {
+                                match = true;
+                            } else if (state === stateFilter) {
+                                match = true;
+                            }
+
+                            // rowHidden requires full row, actually getRangeByIndexes gets columns A to AJ, so we can set rowHidden on it
+                            rowRange.rowHidden = !match;
+                        }
+                        await context.sync();
+                    });
+
+                    // Update UI results list internally
+                    let data = trackerDataset;
+                    let results = [];
+                    for (let i = 1; i < data.length; i++) {
+                        let row = data[i];
+                        let state = row[32] || "Initiated Order";
                         let match = false;
                         if (stateFilter === "ALL" && state !== "Archived" && state !== "Closed" && state) {
                             match = true;
                         } else if (state === stateFilter) {
                             match = true;
                         }
-                        
-                        // rowHidden requires full row, actually getRangeByIndexes gets columns A to AJ, so we can set rowHidden on it
-                        rowRange.rowHidden = !match;
-                    }
-                    await context.sync();
-                });
 
-                // Update UI results list internally
-                let data = trackerDataset;
-                let results = [];
-                for (let i = 1; i < data.length; i++) {
-                    let row = data[i];
-                    let state = row[32] || "Initiated Order";
-                    let match = false;
-                    if (stateFilter === "ALL" && state !== "Archived" && state !== "Closed" && state) {
-                        match = true;
-                    } else if (state === stateFilter) {
-                        match = true;
+                        if (match) {
+                            results.push({
+                                rowIdx: i + 1,
+                                state: state || "PENDING",
+                                pr: row[1] || "No PR",
+                                po: row[8] || "No PO",
+                                supplier: row[5] || "TBD Vendor",
+                                raw: row,
+                                colors: getStateColorConfig(state)
+                            });
+                            if (results.length > 99) break;
+                        }
                     }
-                    
-                    if (match) {
-                        results.push({
-                            rowIdx: i + 1,
-                            state: state || "PENDING",
-                            pr: row[1] || "No PR",
-                            po: row[8] || "No PO",
-                            supplier: row[5] || "TBD Vendor",
-                            raw: row,
-                            colors: getStateColorConfig(state)
-                        });
-                        if(results.length > 99) break;
-                    }
+                    renderResults(results);
+                } catch (error) {
+                    onError("Failed to apply Excel Filter: " + error.message);
                 }
-                renderResults(results);
-            } catch(error) {
-                onError("Failed to apply Excel Filter: " + error.message);
             }
-        }
 
-        function renderResults(res) {
-            showLoading(false);
-            document.getElementById('kpi-panel').style.display = 'none';
-            document.getElementById('results-panel').style.display = 'block';
+            function renderResults(res) {
+                showLoading(false);
+                document.getElementById('kpi-panel').style.display = 'none';
+                document.getElementById('results-panel').style.display = 'block';
 
-            const list = document.getElementById('results-list');
-            list.innerHTML = '';
+                const list = document.getElementById('results-list');
+                list.innerHTML = '';
 
-            if (res.length === 0) {
-                list.innerHTML = '<p style="font-size:0.8rem; color:var(--text-muted);">No matching rows found.</p>';
-            } else {
-                res.forEach(item => {
-                    let div = document.createElement('div');
-                    let bg = item.colors ? item.colors.bg : 'white';
-                    let border = item.colors ? item.colors.border : '#e2e8f0';
-                    let text = item.colors ? item.colors.text : '#00205b';
+                if (res.length === 0) {
+                    list.innerHTML = '<p style="font-size:0.8rem; color:var(--text-muted);">No matching rows found.</p>';
+                } else {
+                    res.forEach(item => {
+                        let div = document.createElement('div');
+                        let bg = item.colors ? item.colors.bg : 'white';
+                        let border = item.colors ? item.colors.border : '#e2e8f0';
+                        let text = item.colors ? item.colors.text : '#00205b';
 
-                    div.style = `background: linear-gradient(to right, ${bg}, #ffffff 15%); border-left: 4px solid ${border}; border-top: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; border-radius: 6px; padding: 10px; margin-bottom: 8px; cursor: pointer;`;
+                        div.style = `background: linear-gradient(to right, ${bg}, #ffffff 15%); border-left: 4px solid ${border}; border-top: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; border-radius: 6px; padding: 10px; margin-bottom: 8px; cursor: pointer;`;
 
-                    // Hydrate local storage with the entire dataset so the dialog can do search!
-                    div.onclick = function () {
-                        localStorage.setItem('ow_ctx_db', JSON.stringify({ raw: trackerDataset, activeRowIdx: item.rowIdx, activeRow: item.raw }));
-                        showActionForm();
-                    };
+                        // Hydrate local storage with the entire dataset so the dialog can do search!
+                        div.onclick = function () {
+                            localStorage.setItem('ow_ctx_db', JSON.stringify({ raw: trackerDataset, activeRowIdx: item.rowIdx, activeRow: item.raw }));
+                            showActionForm();
+                        };
 
-                    let subInfo = [];
-                    if (item.piNo) subInfo.push("PI: " + item.piNo);
-                    if (item.blNo) subInfo.push("BL: " + item.blNo);
-                    if (item.delTerm) subInfo.push("Term: " + item.delTerm);
+                        let subInfo = [];
+                        if (item.piNo) subInfo.push("PI: " + item.piNo);
+                        if (item.blNo) subInfo.push("BL: " + item.blNo);
+                        if (item.delTerm) subInfo.push("Term: " + item.delTerm);
 
-                    div.innerHTML = `<div style="font-weight:700; color:var(--primary); font-size:0.9rem;">${item.pr} | ${item.po}</div>
+                        div.innerHTML = `<div style="font-weight:700; color:var(--primary); font-size:0.9rem;">${item.pr} | ${item.po}</div>
                                      <div style="font-size:0.75rem; color:#64748b; margin-top:3px;">${item.supplier}</div>
                                      ${subInfo.length > 0 ? `<div style="font-size:0.70rem; color:var(--text-muted); margin-top:2px;">${subInfo.join(" | ")}</div>` : ''}
                                      <div style="font-size:0.75rem; font-weight:700; color:${text}; margin-top:4px; text-transform: uppercase;">${item.state}</div>`;
-                    list.appendChild(div);
-                });
-            }
-        }
-
-        function closeResults() {
-            document.getElementById('global-search').value = '';
-            document.getElementById('results-panel').style.display = 'none';
-            document.getElementById('kpi-panel').style.display = 'grid';
-            fetchTrackerData(true);
-        }
-
-        function showActionForm() {
-            // Hydrate DB if clicking New without a row clicked
-            localStorage.setItem('ow_ctx_db', JSON.stringify({ raw: trackerDataset, activeRowIdx: -1, activeRow: [] }));
-            
-            Office.context.ui.displayDialogAsync('https://ahmedalkaik.github.io/ow-control-tower/ActionDialog.html', { height: 75, width: 40, displayInIframe: true },
-                function (asyncResult) {
-                    if (asyncResult.status === Office.AsyncResultStatus.Failed) {
-                        onError("Dialog Error: " + asyncResult.error.message);
-                        return;
-                    }
-                    dialog = asyncResult.value;
-                    dialog.addEventHandler(Office.EventType.DialogMessageReceived, processMessage);
+                        list.appendChild(div);
+                    });
                 }
-            );
-        }
-
-        async function processMessage(arg) {
-            let payloadStr = arg.message;
-            if (!payloadStr) return;
-            
-            showLoading(true);
-            try {
-                let payload = JSON.parse(payloadStr);
-
-                await Excel.run(async (context) => {
-                    const sheet = context.workbook.worksheets.getItem("Tracker");
-                    
-                    const mappings = {
-                        'company': 0, 'prNo': 1, 'prDate': 2, 'desc': 3, 'qty': 4,
-                        'supplier': 5, 'piNo': 6, 'commInv': 7, 'poNo': 8, 'poIssDate': 9,
-                        'fob': 10, 'cif': 11, 'value': 12, 'currency': 13, 'payTerm': 14, 
-                        'delTerm': 15, 'poApprDate': 16, 'bank': 17, 'bankDate': 18, 
-                        'estReadiness': 19, 'reqDelDate': 21, 'containers': 23, 
-                        'containerType': 24, 'etd': 25, 'eta': 26, 'blNo': 27, 
-                        'acid': 28, 'docArrival': 29, 'shipRelease': 30, 'comments': 31,
-                        'state': 32, 'vendorEmail': 33, 'buyerEmail': 34, 'leadTime': 35
-                    };
-
-                    let targetRowIdx = -1;
-                    
-                    if (payload.action === 'create') {
-                        // Find first empty row by rowCount
-                        const usedRange = sheet.getUsedRange();
-                        usedRange.load("rowCount");
-                        await context.sync();
-                        targetRowIdx = usedRange.rowCount;
-                    } else {
-                        // Find matching poNo or prNo
-                        const usedRange = sheet.getUsedRange();
-                        usedRange.load("values");
-                        await context.sync();
-                        
-                        let data = usedRange.values;
-                        for (let i = 1; i < data.length; i++) {
-                            if (payload.poNo && String(data[i][8]) === String(payload.poNo)) {
-                                targetRowIdx = i;
-                                break;
-                            }
-                            if (!payload.poNo && payload.prNo && String(data[i][1]) === String(payload.prNo)) {
-                                targetRowIdx = i;
-                                break;
-                            }
-                        }
-                    }
-
-                    if (targetRowIdx === -1) {
-                        throw new Error("Could not find or create target row.");
-                    }
-                    
-                    let targetRange = sheet.getRangeByIndexes(targetRowIdx, 0, 1, 36);
-                    targetRange.load("values");
-                    await context.sync();
-                    
-                    let newValues = targetRange.values;
-                    
-                    for (let key in payload) {
-                        if (mappings[key] !== undefined) {
-                            newValues[0][mappings[key]] = payload[key] || "";
-                        }
-                    }
-                    if (payload.targetState) {
-                        newValues[0][32] = payload.targetState; 
-                    }
-                    if (payload.action === 'archive') {
-                        newValues[0][32] = "Archived";
-                    }
-
-                    targetRange.values = newValues;
-                    
-                    // Single-row color sync
-                    let state = newValues[0][32];
-                    let bg = '#ffffff'; 
-                    if (state === "In Transit") bg = '#d0e3ff';
-                    else if (state === "Under Clearance") bg = '#fef7e0';
-                    else if (state === "Completed") bg = '#bdf4cb';
-                    else if (state === "Initiated Order") bg = '#f3e8ff';
-                    else if (state === "Archived") bg = '#f1f5f9';
-                    else if (state === "In Production") bg = '#fffbeb';
-                    targetRange.format.fill.color = bg;
-                    
-                    await context.sync();
-                });
-                
-                showLoading(false);
-                if (dialog) dialog.close();
-                fetchTrackerData(true); // reload memory
-            } catch (err) {
-                onError("Failed to execute Excel update: " + err.message);
             }
-        }
 
-        function showLoading(show) {
-            const l = document.getElementById('loader');
-            if (l) l.style.display = show ? 'block' : 'none';
-        }
-        function onError(err) {
-            showLoading(false);
-            const e = document.getElementById('error-msg');
-            let msg = typeof err === 'string' ? err : (err.message || 'An error occurred');
-            if (e) e.innerText = msg;
-        }
-    </script>
+            function closeResults() {
+                document.getElementById('global-search').value = '';
+                document.getElementById('results-panel').style.display = 'none';
+                document.getElementById('kpi-panel').style.display = 'grid';
+                fetchTrackerData(true);
+            }
+
+            function showActionForm() {
+                // Hydrate DB if clicking New without a row clicked
+                localStorage.setItem('ow_ctx_db', JSON.stringify({ raw: trackerDataset, activeRowIdx: -1, activeRow: [] }));
+
+                Office.context.ui.displayDialogAsync('https://ahmedalkaik.github.io/ow-control-tower/ActionDialog.html', { height: 75, width: 40, displayInIframe: true },
+                    function (asyncResult) {
+                        if (asyncResult.status === Office.AsyncResultStatus.Failed) {
+                            onError("Dialog Error: " + asyncResult.error.message);
+                            return;
+                        }
+                        dialog = asyncResult.value;
+                        dialog.addEventHandler(Office.EventType.DialogMessageReceived, processMessage);
+                    }
+                );
+            }
+
+            async function processMessage(arg) {
+                let payloadStr = arg.message;
+                if (!payloadStr) return;
+
+                showLoading(true);
+                try {
+                    let payload = JSON.parse(payloadStr);
+
+                    await Excel.run(async (context) => {
+                        const sheet = context.workbook.worksheets.getItem("Tracker");
+
+                        const mappings = {
+                            'company': 0, 'prNo': 1, 'prDate': 2, 'desc': 3, 'qty': 4,
+                            'supplier': 5, 'piNo': 6, 'commInv': 7, 'poNo': 8, 'poIssDate': 9,
+                            'fob': 10, 'cif': 11, 'value': 12, 'currency': 13, 'payTerm': 14,
+                            'delTerm': 15, 'poApprDate': 16, 'bank': 17, 'bankDate': 18,
+                            'estReadiness': 19, 'reqDelDate': 21, 'containers': 23,
+                            'containerType': 24, 'etd': 25, 'eta': 26, 'blNo': 27,
+                            'acid': 28, 'docArrival': 29, 'shipRelease': 30, 'comments': 31,
+                            'state': 32, 'vendorEmail': 33, 'buyerEmail': 34, 'leadTime': 35
+                        };
+
+                        let targetRowIdx = -1;
+
+                        // 1. Prioritize explicitly selected rows from the UI (convert 1-based back to 0-based for Excel)
+                        if (payload.targetRow && payload.targetRow !== -1) {
+                            targetRowIdx = payload.targetRow - 1;
+                        }
+                        // 2. If 'New' was clicked with no selection, append to bottom
+                        else if (payload.action === 'create') {
+                            const usedRange = sheet.getUsedRange();
+                            usedRange.load("rowCount");
+                            await context.sync();
+                            targetRowIdx = usedRange.rowCount;
+                        }
+                        // 3. Fallback: Search by PO / PR
+                        else {
+                            const usedRange = sheet.getUsedRange();
+                            usedRange.load("values");
+                            await context.sync();
+
+                            let data = usedRange.values;
+                            for (let i = 1; i < data.length; i++) {
+                                if (payload.poNo && String(data[i][8]) === String(payload.poNo)) {
+                                    targetRowIdx = i;
+                                    break;
+                                }
+                                if (!payload.poNo && payload.prNo && String(data[i][1]) === String(payload.prNo)) {
+                                    targetRowIdx = i;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (targetRowIdx === -1) {
+                            throw new Error("Could not find or create target row.");
+                        }
+
+                        let targetRange = sheet.getRangeByIndexes(targetRowIdx, 0, 1, 36);
+                        targetRange.load("values");
+                        await context.sync();
+
+                        let newValues = targetRange.values;
+
+                        for (let key in payload) {
+                            if (mappings[key] !== undefined) {
+                                newValues[0][mappings[key]] = payload[key] || "";
+                            }
+                        }
+                        if (payload.targetState) {
+                            newValues[0][32] = payload.targetState;
+                        }
+                        if (payload.action === 'archive') {
+                            newValues[0][32] = "Archived";
+                        }
+
+                        targetRange.values = newValues;
+
+                        // Single-row color sync
+                        let state = newValues[0][32];
+                        let bg = '#ffffff';
+                        if (state === "In Transit") bg = '#d0e3ff';
+                        else if (state === "Under Clearance") bg = '#fef7e0';
+                        else if (state === "Completed") bg = '#bdf4cb';
+                        else if (state === "Initiated Order") bg = '#f3e8ff';
+                        else if (state === "Archived") bg = '#f1f5f9';
+                        else if (state === "In Production") bg = '#fffbeb';
+                        targetRange.format.fill.color = bg;
+
+                        await context.sync();
+                    });
+
+                    showLoading(false);
+                    if (dialog) dialog.close();
+                    fetchTrackerData(true); // reload memory
+                } catch (err) {
+                    onError("Failed to execute Excel update: " + err.message);
+                }
+            }
+
+            function showLoading(show) {
+                const l = document.getElementById('loader');
+                if (l) l.style.display = show ? 'block' : 'none';
+            }
+            function onError(err) {
+                showLoading(false);
+                const e = document.getElementById('error-msg');
+                let msg = typeof err === 'string' ? err : (err.message || 'An error occurred');
+                if (e) e.innerText = msg;
+            }
+        </script>
 </body>
 
 
