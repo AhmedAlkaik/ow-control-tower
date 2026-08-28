@@ -778,15 +778,15 @@
                     await Excel.run(async (context) => {
                         const sheet = context.workbook.worksheets.getItem("Tracker");
 
-                        const mappings = {
-                            'company': 0, 'prNo': 1, 'prDate': 2, 'desc': 3, 'qty': 4,
-                            'supplier': 5, 'piNo': 6, 'commInv': 7, 'poNo': 8, 'poIssDate': 9,
-                            'fob': 10, 'cif': 11, 'value': 12, 'currency': 13, 'payTerm': 14,
-                            'delTerm': 15, 'poApprDate': 16, 'bank': 17, 'bankDate': 18,
-                            'estReadiness': 19, 'reqDelDate': 21, 'containers': 23,
-                            'containerType': 24, 'etd': 25, 'eta': 26, 'blNo': 27,
-                            'acid': 28, 'docArrival': 29, 'shipRelease': 30, 'comments': 31,
-                            'state': 32, 'vendorEmail': 33, 'buyerEmail': 34, 'leadTime': 35
+                                                const mappings = {
+                            'state': 1, 'prNo': 2, 'prDate': 3, 'poNo': 5, 'poIssDate': 7,
+                            'poApprDate': 8, 'reqDelDate': 9, 'company': 10, 'supplier': 12,
+                            'piNo': 13, 'desc': 15, 'qty': 16, 'fob': 19, 'cif': 20, 'value': 21,
+                            'currency': 22, 'payTerm': 24, 'acid': 25, 'delTerm': 26,
+                            'commInv': 28, 'blNo': 29, 'etd': 30, 'eta': 31, 'shipRelease': 34,
+                            'containers': 35, 'containerType': 36, 'bank': 37, 'bankDate': 38,
+                            'estReadiness': 39, 'leadTime': 41, 'vendorEmail': 43, 
+                            'buyerEmail': 44, 'comments': 47
                         };
 
                         let targetRowIdx = -1;
