@@ -183,38 +183,21 @@
 <body>
     <!-- CONTEXTUAL ENGINE -->
     <div id="top-card" class="info-card"
-        style="border-left: 4px solid var(--primary); display: flex; flex-direction: column;">
-        <div style="margin-bottom: 5px; display: flex; gap: 8px; align-items: center;">
-            <input type="text" id="action-search-input" placeholder="Search PR No or PO No..."
-                style="flex:1; padding: 8px; border-color: var(--primary);">
-            <button class="btn" style="width: auto; white-space: nowrap; padding: 9px 15px;"
-                onclick="executeActionSearch()">🔍 Search</button>
-            <button class="btn success"
-                style="width: auto; white-space: nowrap; padding: 9px 15px; background-color: var(--success);"
-                onclick="createNewOrder()">✨ New</button>
+        style="border-left: 4px solid var(--ow-gold); display: flex; justify-content: space-between; align-items: flex-start;">
+        <div>
+            <div style="font-size: 0.70rem; color: var(--text-muted); text-transform: uppercase;">Active Workspace</div>
+            <div id="ctx-po" style="font-weight: 700; font-size: 1rem; color: var(--primary);">Synchronizing...</div>
+            <div id="ctx-supplier" style="font-size: 0.80rem; font-weight: 600; margin-top: 2px;">-</div>
+            <div id="ctx-sub" style="font-size: 0.70rem; color: var(--text-muted); margin-top: 2px;"></div>
+            <div id="ctx-state" class="status-badge" style="margin-top: 6px;">Detecting...</div>
         </div>
-
-        <!-- Search Results Dropdown-like display -->
-        <div id="action-search-results"
-            style="display: none; margin-top: 10px; max-height: 180px; overflow-y: auto; border: 1px solid var(--border); border-radius: 4px; padding: 5px; gap: 5px; flex-direction: column; background: #f8fafc;">
-        </div>
-
-        <div id="ctx-header"
-            style="display: none; justify-content: space-between; align-items: flex-start; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border);">
-            <div>
-                <div id="ctx-po" style="font-weight: 700; font-size: 1rem; color: var(--primary);"></div>
-                <div id="ctx-supplier" style="font-size: 0.80rem; font-weight: 600; margin-top: 2px;"></div>
-                <div id="ctx-sub" style="font-size: 0.70rem; color: var(--text-muted); margin-top: 2px;"></div>
-                <div id="ctx-state" class="status-badge" style="margin-top: 6px;"></div>
-            </div>
-            <div style="text-align: right;">
-                <label
-                    style="font-size: 0.7rem; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; gap: 4px; background: #f8fafc; padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border);">
-                    <input type="checkbox" id="edit-mode-toggle"
-                        onchange="document.body.classList.toggle('edit-mode', this.checked)">
-                    ✏️ Edit All
-                </label>
-            </div>
+        <div style="text-align: right;">
+            <label
+                style="font-size: 0.7rem; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; gap: 4px; background: #f8fafc; padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border);">
+                <input type="checkbox" id="edit-mode-toggle"
+                    onchange="document.body.classList.toggle('edit-mode', this.checked)">
+                ✏️ Edit All
+            </label>
         </div>
     </div>
 
@@ -362,8 +345,9 @@
         </div>
 
         <div class="flex-row" style="margin-top: 15px;">
-            <button class="btn secondary" onclick="submitData(false)">💾 Save Fields Temporarily</button>
-            <button class="btn success" id="btn-advance" onclick="handleAdvanceClick()">🚀 Advance Phase</button>
+            <button class="btn" style="background-color: #6366f1; color: white;" onclick="autoFillDevMode()">🧪 Auto-Fill</button>
+            <button class="btn secondary" onclick="submitData(false)">💾 Save</button>
+            <button class="btn success" id="btn-advance" onclick="handleAdvanceClick()">🚀 Advance</button>
         </div>
         <button class="btn" style="background-color: #ef4444; color: white; width: 100%; margin-top: 10px;"
             onclick="archiveOrder()">🗑️ Terminate / Archive Order</button>
@@ -468,7 +452,7 @@
                     shipRelease: formatIfDate(data[30]),
                     comments: formatIfDate(data[31]),
                     vendorEmail: formatIfDate(data[33]),
-                    buyerEmail: formatIfDate(data[34]),
+                    buyerEmail: formatIfDate(data[34]) || localStorage.getItem('ow_current_user') || "",
                     leadTime: formatIfDate(data[35])
                 }
             };
@@ -575,7 +559,11 @@
 
             for (let [id, key] of Object.entries(map)) {
                 let el = document.getElementById(id);
-                if (el && data[key] !== undefined) {
+                if (!el) continue;
+                // IGNORE HYDRATION IF USER IS ACTIVELY TYPING IN IT
+                if (el.classList.contains('dirty-input')) continue;
+                
+                if (data[key] !== undefined) {
                     let sheetVal = String(data[key] || "");
                     if (el.tagName === 'SELECT' && sheetVal) {
                         let exists = Array.from(el.options).some(o => o.value === sheetVal);
@@ -678,6 +666,53 @@
                 pendingAdvanceState = false;
                 btn.style.display = 'none';
             }
+        }
+
+        
+        function autoFillDevMode() {
+            const dataMap = {
+                'v-company': 'OWC',
+                'v-prNo': 'TEST-' + Math.floor(Math.random()*10000),
+                'v-prDate': '2026-08-01',
+                'v-desc': 'Dev Test Item',
+                'v-qty': '1000',
+                'v-reqDelDate': '2026-09-01',
+                'v-supplier': 'Global AutoFill Ltd',
+                'v-vendorEmail': 'vendor@test.com',
+                'v-poNo': 'PO-' + Math.floor(Math.random()*100000),
+                'v-poIssDate': '2026-08-05',
+                'v-poApprDate': '2026-08-06',
+                'v-leadTime': '30',
+                'v-etd': '2026-08-15',
+                'v-urgent-etd': '2026-08-15',
+                'v-eta': '2026-09-05',
+                'v-urgent-eta': '2026-09-05',
+                'v-blNo': 'BL-8888',
+                'v-acid': 'ACID-9999',
+                'v-commInv': 'INV-7777',
+                'v-shipRelease': '2026-09-10',
+                'v-docArrival': '2026-09-08'
+            };
+
+            let reqFields = [];
+            if (currentState === "Initiated Order") reqFields = ['v-company', 'v-prNo', 'v-prDate', 'v-desc', 'v-qty', 'v-reqDelDate', 'v-buyerEmail'];
+            else if (currentState === "In Production") reqFields = ['v-supplier', 'v-poNo', 'v-delTerm', 'v-leadTime', 'v-vendorEmail', 'v-poIssDate', 'v-poApprDate'];
+            else if (currentState === "In Transit") reqFields = ['v-etd', 'v-blNo', 'v-acid', 'v-commInv'];
+            else if (currentState === "Under Clearance") reqFields = ['v-docArrival', 'v-shipRelease'];
+
+            reqFields.forEach(id => {
+                let el = document.getElementById(id);
+                if (el && !el.value) {
+                    if (id === 'v-buyerEmail') {
+                        el.value = localStorage.getItem('ow_current_user') || 'dev@orientalweavers.com';
+                    } else if (dataMap[id]) {
+                        el.value = dataMap[id];
+                    } else if (el.tagName === 'SELECT') {
+                        el.selectedIndex = 1; // pick first val
+                    }
+                    el.classList.add('dirty-input');
+                }
+            });
         }
 
         function validatePhaseAdvancement(nextState) {

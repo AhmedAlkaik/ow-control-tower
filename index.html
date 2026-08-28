@@ -448,6 +448,14 @@
         async function initApp() {
             showLoading(true);
             try {
+                let userEmail = "test.buyer@orientalweavers.com";
+                try {
+                    if (Office.context.userProfile && Office.context.userProfile.emailAddress) {
+                       userEmail = Office.context.userProfile.emailAddress;
+                    }
+                } catch(e) {}
+                localStorage.setItem('ow_current_user', userEmail);
+                
                 await Excel.run(async (context) => {
                     const sheet = context.workbook.worksheets.getItemOrNullObject("Tracker");
                     await context.sync();
@@ -486,11 +494,24 @@
                             select.appendChild(opt);
                         });
                     }
+                    
+                    let userEmail = localStorage.getItem('ow_current_user');
+                    if (userEmail && buyers.includes(userEmail)) {
+                        select.value = userEmail;
+                    } else if (userEmail) {
+                        let opt = document.createElement('option');
+                        opt.value = userEmail;
+                        opt.text = "👤 " + userEmail.split("@")[0];
+                        select.appendChild(opt);
+                        select.value = userEmail;
+                    }
 
                     currentBuyerFilter = select.value;
+                    // Automatically filter it
+                    openFilteredGrid();
                     loadKPIsFromMemory(trackerDataset, false);
                 });
-                syncRowColors(); // trigger background color sync
+                // syncRowColors(); // trigger background color sync
             } catch (error) {
                 onError(error);
             }
@@ -507,7 +528,7 @@
                     trackerDataset = usedRange.values;
                     loadKPIsFromMemory(trackerDataset, silent);
                 });
-                syncRowColors();
+                // syncRowColors();
             } catch (error) {
                 if (!silent) onError(error);
             }
@@ -552,9 +573,26 @@
             loadKPIsFromMemory(trackerDataset, false);
         }
 
-        function openFilteredGrid() {
-            const baseSpreadsheetUrl = "https://docs.google.com/spreadsheets/d/1wnI1U98GqL0fYNlv5PKCQ7yMp1zfUPFfQ8UE_0d9T5A/edit#gid=313093570";
-            window.open(baseSpreadsheetUrl, "_blank");
+        async function openFilteredGrid() {
+            try {
+                await Excel.run(async (context) => {
+                    const sheet = context.workbook.worksheets.getItem("Tracker");
+                    const table = sheet.tables.getItemAt(0);
+                    
+                    if (currentBuyerFilter && currentBuyerFilter !== "ALL") {
+                        // Assuming buyer Email is column 35 (index 34)
+                        table.columns.getItemAt(34).filter.apply({
+                            filterOn: Excel.FilterOn.values,
+                            values: [currentBuyerFilter]
+                        });
+                    } else {
+                        table.clearFilters();
+                    }
+                    await context.sync();
+                });
+            } catch (err) {
+                onError("Failed to apply native filter: " + err.message);
+            }
         }
 
         function getStateColorConfig(state) {
@@ -799,6 +837,18 @@
                     }
 
                     targetRange.values = newValues;
+                    
+                    // Single-row color sync
+                    let state = newValues[0][32];
+                    let bg = '#ffffff'; 
+                    if (state === "In Transit") bg = '#d0e3ff';
+                    else if (state === "Under Clearance") bg = '#fef7e0';
+                    else if (state === "Completed") bg = '#bdf4cb';
+                    else if (state === "Initiated Order") bg = '#f3e8ff';
+                    else if (state === "Archived") bg = '#f1f5f9';
+                    else if (state === "In Production") bg = '#fffbeb';
+                    targetRange.format.fill.color = bg;
+                    
                     await context.sync();
                 });
                 
