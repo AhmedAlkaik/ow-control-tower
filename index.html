@@ -594,7 +594,6 @@
                 let currentBuyerFilter = "ALL";
                 let trackerDataset = [];
                 let dialog = null;
-                let activePoller = null;
                 let isProcessing = false;
                 document.addEventListener('input', function(e) {
                     if (e.target && e.target.id && e.target.id.startsWith('v-')) {
@@ -608,24 +607,29 @@
                 });
                 let lastRowIdx = -1;
 
+                let selectionTimeout = null;
+
+                function handleSelectionChange(event) {
+                    if (selectionTimeout) clearTimeout(selectionTimeout);
+                    selectionTimeout = setTimeout(() => {
+                        loadSpecificRow();
+                    }, 250); // Wait 250ms after the user stops moving before syncing
+                }
+
                 Office.onReady((info) => {
                     initApp();
-                    activePoller = setInterval(pollActiveRow, 1000);
                 });
 
 
-                async function pollActiveRow() {
+                async function loadSpecificRow() {
                     if (isProcessing) return;
                     try {
                         await Excel.run(async (context) => {
-                            const sheet = context.workbook.worksheets.getItemOrNullObject("Tracker");
-                            await context.sync();
-                            if (sheet.isNullObject) return;
-
+                            const sheet = context.workbook.worksheets.getItem("Tracker");
                             const activeCell = context.workbook.getActiveCell();
                             activeCell.load("rowIndex");
                             await context.sync();
-
+                            
                             let r = activeCell.rowIndex;
                             if (r === lastRowIdx) return;
                             lastRowIdx = r;
@@ -641,12 +645,11 @@
 
                             let data = range.values[0];
                             let state = data[1] || "Initiated Order";
-                            // If row is totally blank
-                            if (!data[1] && !data[2] && !data[3]) state = "Initiated Order";
+                            
+                            if (!data[2] && !data[3] && !data[15]) state = "Initiated Order";
 
                             currentRowData = data;
 
-                            // Live Adaptation: If the form is currently visible, update it instantly when selection changes
                             const viewForm = document.getElementById('view-form');
                             if (viewForm && viewForm.style.display === 'block') {
                                 processRowSelection(r + 1, data);
@@ -659,7 +662,7 @@
                             }));
                         });
                     } catch (err) {
-                        // Background poll might fail if user is typing
+                        // Silently handle errors if selection is lost during typing
                     }
                 }
 
@@ -747,6 +750,10 @@
                                 document.getElementById('error-msg').innerText = "Tracker sheet not found.";
                                 return;
                             }
+                            
+                            // Native Office.js event listeners attached cleanly
+                            sheet.onSelectionChanged.add(handleSelectionChange);
+                            sheet.onChanged.add(handleSelectionChange);
 
                             const usedRange = sheet.getUsedRange();
                             usedRange.load("values");
