@@ -676,8 +676,6 @@
                     } catch (e) { }
                 }
 
-                async 
-
                 function toggleEditMode(isChecked) {
                     document.body.classList.toggle('edit-mode', isChecked);
                     document.querySelectorAll('details').forEach(d => { 
@@ -803,8 +801,8 @@
                         for (let i = 1; i < data.length; i++) {
                             let state = String(data[i][1] || "Initiated Order").trim();
                             let buyer = data[i][44];
-
-                            if (currentBuyerFilter && currentBuyerFilter !== "ALL" && String(buyer) !== currentBuyerFilter) continue;
+                            let safeBuyer = buyer ? String(buyer).trim() : "";
+                            if (currentBuyerFilter && currentBuyerFilter !== "ALL" && safeBuyer !== "" && safeBuyer !== currentBuyerFilter) continue;
 
                             if (state && state !== "Archived" && state !== "Closed") {
                                 counts["TOTAL_ACTIVE"]++;
@@ -872,7 +870,8 @@
                             let row = data[i];
                             let state = row[1] || "Initiated Order";
                             let buyer = row[44];
-                            if (currentBuyerFilter && currentBuyerFilter !== "ALL" && String(buyer) !== currentBuyerFilter) continue;
+                            let safeBuyer = buyer ? String(buyer).trim() : "";
+                            if (currentBuyerFilter && currentBuyerFilter !== "ALL" && safeBuyer !== "" && safeBuyer !== currentBuyerFilter) continue;
 
                             let rowText = row.join("|").toLowerCase();
                             if (rowText.includes(safeQuery)) {
@@ -910,6 +909,13 @@
                             await context.sync();
 
                             for (let i = 1; i < usedRange.rowCount; i++) {
+                                let buyer = usedRange.values[i][44];
+                                let safeBuyer = buyer ? String(buyer).trim() : "";
+                                if (currentBuyerFilter && currentBuyerFilter !== "ALL" && safeBuyer !== "" && safeBuyer !== currentBuyerFilter) {
+                                    sheet.getRangeByIndexes(i, 0, 1, 48).rowHidden = true;
+                                    continue;
+                                }
+
                                 let state = usedRange.values[i][1] || "Initiated Order";
                                 let rowRange = sheet.getRangeByIndexes(i, 0, 1, 48);
 
@@ -931,6 +937,10 @@
                         let results = [];
                         for (let i = 1; i < data.length; i++) {
                             let row = data[i];
+                            let buyer = row[44];
+                            let safeBuyer = buyer ? String(buyer).trim() : "";
+                            if (currentBuyerFilter && currentBuyerFilter !== "ALL" && safeBuyer !== "" && safeBuyer !== currentBuyerFilter) continue;
+
                             let state = row[1] || "Initiated Order";
                             let match = false;
                             if (stateFilter === "ALL" && state !== "Archived" && state !== "Closed" && state) {
@@ -1032,7 +1042,7 @@
                 function showDashboard() {
                     document.getElementById('view-form').style.display = 'none';
                     document.getElementById('view-dash').style.display = 'block';
-                } function closeActionForm() { document.getElementById("dashboard-view").style.display = "block"; document.getElementById("action-view").style.display = "none"; }
+                } 
 
 
                 async function processMessage(arg) {
@@ -1132,7 +1142,7 @@
                         showLoading(false);
 
                         // 
-                        // fetchTrackerData(true); // reload memory manually
+                        fetchTrackerData(true); // reload memory manually
                     } catch (err) {
                         onError("Failed to execute Excel update: " + err.message);
                     }
@@ -1560,6 +1570,9 @@
                             payload[key] = el.value;
                         }
                     });
+                    if (!payload['buyerEmail']) {
+                        payload['buyerEmail'] = localStorage.getItem('ow_current_user') || "";
+                    }
 
                     try {
                         processMessage({ message: JSON.stringify(payload) });
@@ -1585,14 +1598,7 @@
                 }
             </script>
         </div>
-        <div id="action-view" style="display: none; height: 100vh; flex-direction: column;">
-            <div style="padding: 10px; background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
-                <button class="btn" style="background: #64748b; color: white; width: 100%;"
-                    onclick="closeActionForm()">⬅️ Back to Dashboard</button>
-            </div>
-            <iframe id="action-frame" src="ActionDialog.html"
-                style="flex: 1; width: 100%; border: none; height: 100%;"></iframe>
-        </div>
+        
 </body>
 
 
