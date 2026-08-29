@@ -269,6 +269,24 @@
 </head>
 
 <body>
+          <div id="identity-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); z-index: 10000; align-items: center; justify-content: center;">
+            <div style="background: white; padding: 25px; border-radius: 8px; width: 300px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                <div style="font-size: 1.2rem; font-weight: bold; color: var(--primary); margin-bottom: 10px;">👤 Identify Yourself</div>
+                <p style="font-size: 0.8rem; color: #475569; margin-bottom: 15px;">Your email could not be completely auto-detected by the browser. Please enter your email to bind your edits.</p>
+                <input type="email" id="identity-email" placeholder="fullname@orientalweavers.com" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; margin-bottom: 15px;">
+                <button class="btn" style="background: var(--primary); color: white; width: 100%;" onclick="saveIdentity()">Confirm Identity</button>
+            </div>
+          </div>
+          <script>
+            function saveIdentity() {
+                let v = document.getElementById('identity-email').value;
+                if (!v || !v.includes('@')) { alert("Please enter a valid email."); return; }
+                localStorage.setItem('ow_real_user', v.trim().toLowerCase());
+                localStorage.setItem('ow_current_user', v.trim().toLowerCase());
+                document.getElementById('identity-modal').style.display = 'none';
+                window.location.reload();
+            }
+          </script>
     <div id="dashboard-view">
         <div class="main-container">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
@@ -699,12 +717,24 @@
                 async function initApp() {
                     showLoading(true);
                     try {
-                        let userEmail = "test.buyer@orientalweavers.com";
-                        try {
-                            if (Office.context.userProfile && Office.context.userProfile.emailAddress) {
-                                userEmail = Office.context.userProfile.emailAddress;
-                            }
-                        } catch (e) { }
+                        
+                        let userEmail = localStorage.getItem('ow_real_user') || "";
+                        if (!userEmail) {
+                            try {
+                                if (Office.context.userProfile && Office.context.userProfile.emailAddress) {
+                                    userEmail = Office.context.userProfile.emailAddress;
+                                    localStorage.setItem('ow_real_user', userEmail);
+                                }
+                            } catch (e) { }
+                        }
+                        
+                        if (!userEmail || userEmail.includes('test.buyer')) {
+                            // If auto-detection absolutely fails (usually due to iframe SSO blocking on Web), we trigger the native modal
+                            document.getElementById('identity-modal').style.display = 'flex';
+                            showLoading(false);
+                            return; // Halt initialisation until identity is confirmed
+                        }
+                        
                         localStorage.setItem('ow_current_user', userEmail);
 
                         await Excel.run(async (context) => {
