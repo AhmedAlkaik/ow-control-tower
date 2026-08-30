@@ -714,6 +714,60 @@
                     }
                 }
 
+                                async function fetchDropdowns() {
+                    try {
+                        await Excel.run(async (context) => {
+                            const sheet = context.workbook.worksheets.getItemOrNullObject("Dropdowns");
+                            await context.sync();
+                            if (sheet.isNullObject) return;
+                            
+                            const range = sheet.getUsedRange();
+                            range.load("values");
+                            await context.sync();
+                            
+                            let dropVals = range.values;
+                            if (dropVals && dropVals.length > 1) {
+                                let curOpts = [], inOpts = [], bnkOpts = [], payOpts = [];
+                                for (let r = 1; r < dropVals.length; r++) {
+                                    if (dropVals[r][0]) curOpts.push(String(dropVals[r][0]).trim());
+                                    if (dropVals[r][1]) inOpts.push(String(dropVals[r][1]).trim());
+                                    if (dropVals[r][2]) bnkOpts.push(String(dropVals[r][2]).trim());
+                                    if (dropVals[r][3]) payOpts.push(String(dropVals[r][3]).trim());
+                                }
+                                
+                                function popSel(id, arr) {
+                                    let el = document.getElementById(id);
+                                    if (!el) return;
+                                    let currentVal = el.value; // Store the currently selected value before flushing
+                                    el.innerHTML = '<option value=""></option>';
+                                    arr.forEach(val => {
+                                        if (val) {
+                                            let o = document.createElement('option');
+                                            o.value = val; o.text = val;
+                                            el.appendChild(o);
+                                        }
+                                    });
+                                    
+                                    // If what they had is gone, append it gracefully to prevent data loss.
+                                    if (currentVal) {
+                                        let exists = Array.from(el.options).some(o => o.value === currentVal);
+                                        if (!exists) {
+                                            let o = document.createElement('option');
+                                            o.value = currentVal; o.text = currentVal; el.appendChild(o);
+                                        }
+                                        el.value = currentVal;
+                                    }
+                                }
+                                
+                                popSel('v-currency', curOpts);
+                                popSel('v-delTerm', inOpts);
+                                popSel('v-bank', bnkOpts);
+                                popSel('v-payTerm', payOpts);
+                            }
+                        });
+                    } catch (e) {}
+                }
+
                 async function initApp() {
                     showLoading(true);
                     try {
@@ -757,6 +811,15 @@
                             await context.sync();
 
                             trackerDataset = usedRange.values;
+
+                            // Load Dropdowns natively
+                            await fetchDropdowns();
+                            
+                            const dropSheet = context.workbook.worksheets.getItemOrNullObject("Dropdowns");
+                            await context.sync();
+                            if (!dropSheet.isNullObject) {
+                                dropSheet.onChanged.add(fetchDropdowns);
+                            }
 
                             let buyers = [];
                             if (trackerDataset.length > 1) {
