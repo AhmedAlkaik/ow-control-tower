@@ -27,16 +27,14 @@
             color: var(--text);
             margin: 0;
             padding: 0;
-            display: flex;
-            justify-content: center;
-        }
+            }
 
         .main-container {
             background-color: var(--bg-color);
             max-width: 900px;
             width: 100%;
             min-height: 100vh;
-            padding: 30px;
+            padding: 12px;
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
@@ -107,7 +105,8 @@
             background-color: #fafafa;
             border: 1px solid var(--border);
             color: var(--text);
-            padding: 8px 12px;
+            padding: 6px 10px;
+            font-size: 0.8rem;
             border-radius: 6px;
             font-family: 'Outfit', sans-serif;
             transition: all 0.2s ease;
@@ -265,6 +264,29 @@
         body.edit-mode .flex-row { display: flex !important; }
         details { transition: all 0.3s ease; }
         body.edit-mode details { display: block !important; }
+    
+        .flex-row {
+            display: flex;
+            flex-direction: column;
+            gap: 0px; 
+            width: 100%;
+        }
+        .flex-row > .form-group {
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        details summary {
+            padding: 8px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            background-color: #f1f5f9;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .details-content {
+            padding: 10px 4px;
+        }
     </style>
 </head>
 
@@ -385,12 +407,12 @@
 
 
             <!-- FORM VIEW (SPA mode) -->
-            <div id="view-form" style="display: none; animation: fadeIn 0.3s ease; padding: 20px;">
+            <div id="view-form" style="display: none; animation: fadeIn 0.3s ease; ">
                 <button class="btn secondary" onclick="showDashboard()" style="margin-bottom: 25px;"><i
                         class="fas fa-arrow-left"></i> Back to Dashboard</button>
                 <!-- CONTEXTUAL ENGINE -->
                 <div id="top-card" class="info-card"
-                    style="border-left: 4px solid var(--ow-gold); display: flex; justify-content: space-between; align-items: flex-start;">
+                    style="border-left: 4px solid var(--ow-gold); display: flex; justify-content: space-between; flex-direction: column; gap: 10px;">
                     <div>
                         <div style="font-size: 0.70rem; color: var(--text-muted); text-transform: uppercase;">Active
                             Workspace</div>
@@ -411,7 +433,7 @@
 
 
                 <div id="completed-msg"
-                    style="display: none; text-align: center; padding: 30px; color: var(--success); font-weight: bold;">
+                    style="display: none; text-align: center; padding: 12px; color: var(--success); font-weight: bold;">
                     âœ… This order
                     is Completed. No further actions required.</div>
 
@@ -561,7 +583,7 @@
                         <input type="text" id="v-comments">
                     </div>
 
-                    <div class="flex-row" style="margin-top: 15px;">
+                    <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 15px;">
                         <button class="btn" style="background-color: #6366f1; color: white;"
                             onclick="autoFillDevMode()">🧪 Auto-Fill</button>
                         <button class="btn secondary" onclick="submitData(false)">💾 Save</button>
