@@ -1177,8 +1177,17 @@
                         });
 
                         showLoading(false);
+                        try {
+                            if (payload && payload.targetRow) {
+                                document.getElementById('error-msg').style.color = "var(--success)";
+                                document.getElementById('error-msg').innerText = "✅ Successfully saved to Row " + payload.targetRow;
+                                setTimeout(() => { document.getElementById('error-msg').innerText = ""; document.getElementById('error-msg').style.color = "#ef4444"; }, 3000);
+                            }
+                        } catch(ee) {}
 
-                        // 
+                        // INSTANTLY RELOAD THE UI FORM!
+                        lastRowIdx = -1;
+                        loadSpecificRow();
                         fetchTrackerData(true); // reload memory manually
                     } catch (err) {
                         onError("Failed to execute Excel update: " + err.message);

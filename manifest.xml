@@ -25,6 +25,8 @@
   <!-- The Bridge: Your Netlify/GitHub URL -->
   <DefaultSettings>
     <SourceLocation DefaultValue="https://ahmedalkaik.github.io/ow-control-tower/index.html" />
+      <IconUrl DefaultValue="https://ahmedalkaik.github.io/ow-control-tower/icon-32.png" />
+    <HighResolutionIconUrl DefaultValue="https://ahmedalkaik.github.io/ow-control-tower/icon-80.png" />
   </DefaultSettings>
 
   <!-- Permissions required to interact with the sheet -->
