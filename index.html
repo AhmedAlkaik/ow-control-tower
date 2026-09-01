@@ -497,7 +497,6 @@
                                 <div class="form-group"><label>PO Date</label><input type="date" id="v-poDate" onclick="this.showPicker()"></div>
                             </div>
                             <div class="flex-row">
-                                <div class="form-group"><label>PO Issuance Date</label><input type="date" id="v-poIssDate" onclick="this.showPicker()"></div>
                                 <div class="form-group"><label>PO Approval Date</label><input type="date" id="v-poApprDate" onclick="this.showPicker()"></div>
                             </div>
                             <div class="flex-row">
@@ -1412,7 +1411,7 @@
                 function hydrateInputs(data, forceWipe) {
                                         const map = {
                         'v-category': 'category', 'v-prNo': 'prNo', 'v-prDate': 'prDate', 'v-rfq': 'rfq',
-                        'v-poNo': 'poNo', 'v-poDate': 'poDate', 'v-poIssDate': 'poIssDate', 'v-poApprDate': 'poApprDate',
+                        'v-poNo': 'poNo', 'v-poDate': 'poDate', 'v-poApprDate': 'poApprDate',
                         'v-reqDelDate': 'reqDelDate', 'v-company': 'company', 'v-vendorId': 'vendorId',
                         'v-supplier': 'supplier', 'v-piNo': 'piNo', 'v-itemCode': 'itemCode', 'v-desc': 'desc',
                         'v-qty': 'qty', 'v-unit': 'unit', 'v-fob': 'fob', 'v-cif': 'cif',
@@ -1549,7 +1548,6 @@
                         'v-supplier': 'Global AutoFill Ltd',
                         'v-vendorEmail': 'vendor@test.com',
                         'v-poNo': 'PO-' + Math.floor(Math.random() * 100000),
-                        'v-poIssDate': '2026-08-05',
                         'v-poApprDate': '2026-08-06',
                         'v-leadTime': '30',
                         'v-etd': '2026-08-15',
@@ -1564,10 +1562,10 @@
                     };
 
                     let reqFields = [];
-                    if (currentState === "Initiated Order") reqFields = ['v-category', 'v-prNo', 'v-prDate', 'v-rfq', 'v-reqDelDate', 'v-company', 'v-itemCode', 'v-desc', 'v-leadTime', 'v-buyerEmail'];
-                    else if (currentState === "In Production") reqFields = ['v-poNo', 'v-poDate', 'v-poIssDate', 'v-poApprDate', 'v-vendorId', 'v-supplier', 'v-piNo', 'v-qty', 'v-unit', 'v-fob', 'v-cif', 'v-value', 'v-currency', 'v-vendorEmail'];
-                    else if (currentState === "In Transit") reqFields = ['v-productionDate', 'v-estReadiness', 'v-payTerm', 'v-acid', 'v-delTerm', 'v-shipmentNo', 'v-commInv', 'v-blNo', 'v-etd', 'v-eta', 'v-containers', 'v-containerType'];
-                    else if (currentState === "Under Clearance") reqFields = ['v-courierNo', 'v-courierDate', 'v-bank', 'v-bankDate', 'v-lc', 'v-shipRelease', 'v-origin', 'v-port'];
+                    if (currentState === "Initiated Order") reqFields = ['v-prNo', 'v-prDate', 'v-reqDelDate', 'v-company', 'v-itemCode', 'v-desc', 'v-leadTime'];
+                    else if (currentState === "In Production") reqFields = ['v-poNo', 'v-poDate', 'v-poApprDate', 'v-vendorId', 'v-supplier', 'v-qty', 'v-unit', 'v-value', 'v-currency', 'v-vendorEmail'];
+                    else if (currentState === "In Transit") reqFields = ['v-estReadiness', 'v-payTerm', 'v-acid', 'v-delTerm', 'v-shipmentNo', 'v-commInv', 'v-blNo', 'v-etd', 'v-eta'];
+                    else if (currentState === "Under Clearance") reqFields = ['v-courierNo', 'v-courierDate', 'v-bank', 'v-shipRelease', 'v-grDate'];
 
                     reqFields.forEach(id => {
                         let el = document.getElementById(id);
@@ -1586,10 +1584,10 @@
 
                 function validatePhaseAdvancement(nextState) {
                     let requiredFields = [];
-                    if (nextState === "In Production") requiredFields = ['v-category', 'v-prNo', 'v-prDate', 'v-rfq', 'v-reqDelDate', 'v-company', 'v-itemCode', 'v-desc', 'v-leadTime', 'v-buyerEmail'];
-                    else if (nextState === "In Transit") requiredFields = ['v-poNo', 'v-poDate', 'v-poIssDate', 'v-poApprDate', 'v-vendorId', 'v-supplier', 'v-piNo', 'v-qty', 'v-unit', 'v-fob', 'v-cif', 'v-value', 'v-currency', 'v-vendorEmail'];
-                    else if (nextState === "Under Clearance") requiredFields = ['v-productionDate', 'v-estReadiness', 'v-payTerm', 'v-acid', 'v-delTerm', 'v-shipmentNo', 'v-commInv', 'v-blNo', 'v-etd', 'v-eta', 'v-containers', 'v-containerType'];
-                    else if (nextState === "Completed") requiredFields = ['v-courierNo', 'v-courierDate', 'v-bank', 'v-bankDate', 'v-lc', 'v-shipRelease', 'v-origin', 'v-port'];
+                    if (nextState === "In Production") requiredFields = ['v-prNo', 'v-prDate', 'v-reqDelDate', 'v-company', 'v-itemCode', 'v-desc', 'v-leadTime'];
+                    else if (nextState === "In Transit") requiredFields = ['v-poNo', 'v-poDate', 'v-poApprDate', 'v-vendorId', 'v-supplier', 'v-qty', 'v-unit', 'v-value', 'v-currency', 'v-vendorEmail'];
+                    else if (nextState === "Under Clearance") requiredFields = ['v-estReadiness', 'v-payTerm', 'v-acid', 'v-delTerm', 'v-shipmentNo', 'v-commInv', 'v-blNo', 'v-etd', 'v-eta'];
+                    else if (nextState === "Completed") requiredFields = ['v-courierNo', 'v-courierDate', 'v-bank', 'v-shipRelease', 'v-grDate'];
 
                     let missing = [];
                     for (let i = 0; i < requiredFields.length; i++) {
