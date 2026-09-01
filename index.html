@@ -603,7 +603,7 @@
                 let currentState = "Initiated Order";
                 let currentPoNo = "";
                 let currentPrNo = "";
-                let currentRowData = new Array(48).fill(""); // Stores the active live data
+                let currentRowData = new Array(47).fill(""); // Stores the active live data
                 let lastCtxRaw = null; // Cache last row data for form toggling
 
 
@@ -653,11 +653,11 @@
                             lastRowIdx = r;
 
                             if (r === 0) {
-                                localStorage.setItem('ow_ctx_live', JSON.stringify({ rowIdx: 0, raw: new Array(48).fill(""), state: "" }));
+                                localStorage.setItem('ow_ctx_live', JSON.stringify({ rowIdx: 0, raw: new Array(47).fill(""), state: "" }));
                                 return;
                             }
 
-                            let range = sheet.getRangeByIndexes(r, 0, 1, 48);
+                            let range = sheet.getRangeByIndexes(r, 0, 1, 47);
                             range.load("values");
                             await context.sync();
 
@@ -707,7 +707,7 @@
                                 else if (state === "In Production") bg = '#fffbeb';
 
                                 // We format the whole row matching active data bounds
-                                let rowRange = sheet.getRangeByIndexes(i, 0, 1, 48);
+                                let rowRange = sheet.getRangeByIndexes(i, 0, 1, 47);
                                 rowRange.format.fill.color = bg;
                             }
                             await context.sync();
@@ -845,7 +845,7 @@
                             let buyers = [];
                             if (trackerDataset.length > 1) {
                                 for (let i = 1; i < trackerDataset.length; i++) {
-                                    let b = trackerDataset[i][44];
+                                    let b = trackerDataset[i][43];
                                     if (b && String(b).trim() !== "") {
                                         
                                         let cleanB = String(b).trim();
@@ -922,7 +922,7 @@
                     if (data && data.length > 1) {
                         for (let i = 1; i < data.length; i++) {
                             let state = String(data[i][1] || "Initiated Order").trim();
-                            let buyer = data[i][44];
+                            let buyer = data[i][43];
                             let safeBuyer = buyer ? String(buyer).trim() : "";
                             if (currentBuyerFilter && currentBuyerFilter !== "ALL" && safeBuyer !== "" && safeBuyer !== currentBuyerFilter) continue;
 
@@ -971,7 +971,7 @@
                         for (let i = 1; i < data.length; i++) {
                             let row = data[i];
                             let state = row[1] || "Initiated Order";
-                            let buyer = row[44];
+                            let buyer = row[43];
                             let safeBuyer = buyer ? String(buyer).trim() : "";
                             if (currentBuyerFilter && currentBuyerFilter !== "ALL" && safeBuyer !== "" && safeBuyer !== currentBuyerFilter) continue;
 
@@ -1007,7 +1007,7 @@
                     for (let i = 1; i < data.length; i++) {
                         let row = data[i];
                         let state = row[1] || "Initiated Order";
-                        let buyer = row[44];
+                        let buyer = row[43];
                         let safeBuyer = buyer ? String(buyer).trim() : "";
                         
                         // Ensure buyer match if filter is active
@@ -1100,7 +1100,7 @@
                         if (lastRowIdx > 0 && currentRowData && currentRowData.length > 0) {
                             processRowSelection(lastRowIdx + 1, currentRowData);
                         } else {
-                            processRowSelection(-1, new Array(48).fill(""));
+                            processRowSelection(-1, new Array(47).fill(""));
                         }
                     } catch (err) {
                         onError("Crash inside showActionForm: " + err.message);
@@ -1173,7 +1173,7 @@
                                 throw new Error("Could not find or create target row.");
                             }
 
-                            let targetRange = sheet.getRangeByIndexes(targetRowIdx, 0, 1, 48);
+                            let targetRange = sheet.getRangeByIndexes(targetRowIdx, 0, 1, 47);
                             targetRange.load("values");
                             await context.sync();
 
@@ -1251,7 +1251,7 @@
                         return val ? String(val) : "";
                     };
 
-                    const data = selectedRow || new Array(48).fill("");
+                    const data = selectedRow || new Array(47).fill("");
                     currentPoNo = String(data[5] || "");
                     currentPrNo = String(data[2] || "");
 
@@ -1314,7 +1314,7 @@
                             leadTime: formatIfDate(data[41]),
                             grDate: formatIfDate(data[42]),
                             vendorEmail: formatIfDate(data[43]),
-                            buyerEmail: formatIfDate(data[44]) || localStorage.getItem('ow_current_user') || "",
+                            buyerEmail: formatIfDate(data[43]) || localStorage.getItem('ow_current_user') || "",
                             origin: formatIfDate(data[45]),
                             port: formatIfDate(data[46]),
                             comments: formatIfDate(data[47])
