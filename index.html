@@ -91,6 +91,7 @@
             margin-bottom: 12px;
             display: flex;
             flex-direction: column;
+            width: 100%;
         }
 
         label {
@@ -100,20 +101,20 @@
             font-weight: 600;
         }
 
-        input,
-        select {
+        input, select, textarea {
             background-color: #fafafa;
-            border: 1px solid var(--border);
+            border: 1px solid #94a3b8;
             color: var(--text);
-            padding: 6px 10px;
-            font-size: 0.8rem;
+            padding: 8px 10px;
+            font-size: 0.85rem;
             border-radius: 6px;
             font-family: 'Outfit', sans-serif;
             transition: all 0.2s ease;
+            width: 100%;
+            box-sizing: border-box;
         }
 
-        input:focus,
-        select:focus {
+        input:focus, select:focus, textarea:focus {
             outline: none;
             border-color: var(--ow-gold);
             box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.3);
@@ -408,8 +409,9 @@
 
             <!-- FORM VIEW (SPA mode) -->
             <div id="view-form" style="display: none; animation: fadeIn 0.3s ease; ">
-                <button class="btn secondary" onclick="showDashboard()" style="margin-bottom: 25px;"><i
-                        class="fas fa-arrow-left"></i> Back to Dashboard</button>
+                <div style="padding-bottom: 15px;">
+    <a href="#" onclick="showDashboard()" style="color: var(--text-muted); text-decoration: none; font-size: 0.8rem; font-weight: 600;">← Back to Dashboard</a>
+</div>
                 <!-- CONTEXTUAL ENGINE -->
                 <div id="top-card" class="info-card"
                     style="border-left: 4px solid var(--ow-gold); display: flex; justify-content: space-between; flex-direction: column; gap: 10px;">
@@ -444,22 +446,18 @@
                         <div style="font-size: 0.9rem; font-weight: bold; color: var(--warning); margin-bottom: 8px;">
                             â±ï¸ Critical
                             Date Updater</div>
-                        <div class="flex-row" style="align-items: flex-end; gap: 8px;">
-                            <div class="form-group" style="margin: 0; flex: 1;">
-                                <label style="color: #b45309; font-weight: bold;">ETD (Target/Actual)</label>
-                                <input type="date" id="v-urgent-etd" onclick="this.showPicker()"
-                                    onchange="syncBinding('v-etd', this.value)"
-                                    style="border: 1px solid var(--warning);">
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                <div class="form-group" style="margin: 0;">
+                                    <label style="color: #b45309; font-weight: bold;">ETD (Target/Actual)</label>
+                                    <input type="date" id="v-urgent-etd" onclick="this.showPicker()" onchange="syncBinding('v-etd', this.value)" style="border: 1px solid var(--warning);">
+                                </div>
+                                <div class="form-group" style="margin: 0;">
+                                    <label style="color: #b45309; font-weight: bold;">ETA (Vessel Arrival)</label>
+                                    <input type="date" id="v-urgent-eta" onclick="this.showPicker()" onchange="syncBinding('v-eta', this.value)" style="border: 1px solid var(--warning);">
+                                </div>
                             </div>
-                            <div class="form-group" style="margin: 0; flex: 1;">
-                                <label style="color: #b45309; font-weight: bold;">ETA (Vessel Arrival)</label>
-                                <input type="date" id="v-urgent-eta" onclick="this.showPicker()"
-                                    onchange="syncBinding('v-eta', this.value)"
-                                    style="border: 1px solid var(--warning);">
-                            </div>
-                            <button class="btn"
-                                style="flex: 0.5; background-color: var(--warning); color: white; padding: 8px;"
-                                onclick="submitData(false)">🔄 Update</button>
+                            <button class="btn" style="background-color: var(--warning); color: white; width: 100%; margin-top: 0;" onclick="submitData(false)">🔄 Update Critical Dates</button>
                         </div>
                     </div>
 
@@ -582,15 +580,18 @@
                         <input type="text" id="v-comments">
                     </div>
 
-                    <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 15px;">
-                        <button class="btn" style="background-color: #6366f1; color: white;"
-                            onclick="autoFillDevMode()">🧪 Auto-Fill</button>
-                        <button class="btn secondary" onclick="submitData(false)">💾 Save</button>
-                        <button class="btn success" id="btn-advance" onclick="handleAdvanceClick()">ðŸš€
-                            Advance</button>
+                    <div style="position: sticky; bottom: 0; background: var(--bg-color); padding: 15px 0; border-top: 1px solid var(--border); margin-top: 20px;">
+                    <div style="text-align: right; margin-bottom: 10px;">
+                        <a href="#" onclick="autoFillDevMode()" style="font-size: 0.75rem; color: #6366f1; text-decoration: underline; font-weight: 600;">🧪 Auto-Fill Dev Data</a>
                     </div>
-                    <button class="btn" style="background-color: #ef4444; color: white; width: 100%; margin-top: 10px;"
-                        onclick="archiveOrder()">🗑️ Terminate / Archive Order</button>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                        <button class="btn" style="background-color: white; color: var(--primary); border: 1px solid var(--primary); margin: 0;" onclick="submitData(false)">💾 Save</button>
+                        <button class="btn success" id="btn-advance" onclick="handleAdvanceClick()" style="margin: 0;">🚀 Advance</button>
+                    </div>
+                    <div style="text-align: center;">
+                        <a href="#" onclick="archiveOrder()" style="font-size: 0.75rem; color: #ef4444; font-weight: 600; text-decoration: underline;">🗑️ Terminate / Archive Order</a>
+                    </div>
+                </div>
                 </div>
 
 
@@ -1521,9 +1522,9 @@
                     if (!btn) return;
                     let btnConfig = {
                         "Initiated Order": { label: "🚀 Advance to IN PRODUCTION", next: "In Production" },
-                        "In Production": { label: "ðŸš€ Advance to IN TRANSIT", next: "In Transit" },
-                        "In Transit": { label: "ðŸš€ Advance to UNDER CLEARANCE", next: "Under Clearance" },
-                        "Under Clearance": { label: "ðŸš€ Advance to COMPLETED", next: "Completed" }
+                        "In Production": { label: "🚀 Advance to IN TRANSIT", next: "In Transit" },
+                        "In Transit": { label: "🚀 Advance to UNDER CLEARANCE", next: "Under Clearance" },
+                        "Under Clearance": { label: "🚀 Advance to COMPLETED", next: "Completed" }
                     };
 
                     if (btnConfig[state]) {
