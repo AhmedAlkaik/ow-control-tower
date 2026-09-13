@@ -669,6 +669,35 @@
                     }
                 }
 
+                async function fetchSheetDataInChunks(context, sheetName) {
+                    const sheet = context.workbook.worksheets.getItemOrNullObject(sheetName);
+                    await context.sync();
+                    if (sheet.isNullObject) return null;
+                    
+                    const usedRange = sheet.getUsedRange();
+                    usedRange.load(["rowIndex", "columnIndex", "rowCount", "columnCount"]);
+                    await context.sync();
+                    
+                    if (usedRange.rowCount === 0) return [];
+                    
+                    let allData = [];
+                    const CHUNK_SIZE = 5000; 
+                    
+                    for (let i = 0; i < usedRange.rowCount; i += CHUNK_SIZE) {
+                        let rowsToRead = Math.min(CHUNK_SIZE, usedRange.rowCount - i);
+                        let chunkRange = sheet.getRangeByIndexes(
+                            usedRange.rowIndex + i, 
+                            usedRange.columnIndex, 
+                            rowsToRead, 
+                            usedRange.columnCount
+                        );
+                        chunkRange.load("values");
+                        await context.sync();
+                        allData = allData.concat(chunkRange.values);
+                    }
+                    return allData;
+                }
+
                 function handleSelectionChange(event) {
                     if (selectionTimeout) clearTimeout(selectionTimeout);
                     selectionTimeout = setTimeout(() => {
@@ -869,11 +898,7 @@
                             sheet.onSelectionChanged.add(handleSelectionChange);
                             sheet.onChanged.add(handleSelectionChange);
 
-                            const usedRange = sheet.getUsedRange();
-                            usedRange.load("values");
-                            await context.sync();
-
-                            trackerDataset = usedRange.values;
+                            trackerDataset = await fetchSheetDataInChunks(context, "Tracker") || [];
 
                             // Load Dropdowns natively
                             await fetchDropdowns();
@@ -881,10 +906,7 @@
                             const matSheet = context.workbook.worksheets.getItemOrNullObject("Material Master");
                             await context.sync();
                             if (!matSheet.isNullObject) {
-                                const matRange = matSheet.getUsedRange();
-                                matRange.load("values");
-                                await context.sync();
-                                let matData = matRange.values;
+                                let matData = await fetchSheetDataInChunks(context, "Material Master") || [];
                                 for (let i = 1; i < matData.length; i++) {
                                     let code = String(matData[i][0] || "").trim().toUpperCase();
                                     let desc = String(matData[i][1] || "").trim();
@@ -973,11 +995,7 @@
                     if (!silent) showLoading(true);
                     try {
                         await Excel.run(async (context) => {
-                            const sheet = context.workbook.worksheets.getItem("Tracker");
-                            const usedRange = sheet.getUsedRange();
-                            usedRange.load("values");
-                            await context.sync();
-                            trackerDataset = usedRange.values;
+                            trackerDataset = await fetchSheetDataInChunks(context, "Tracker") || [];
                             loadKPIsFromMemory(trackerDataset, silent);
                         });
                         // syncRowColors();
