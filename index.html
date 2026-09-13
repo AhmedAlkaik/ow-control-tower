@@ -498,8 +498,8 @@
                                 <div class="form-group"><label>PO Approval Date</label><input type="date" id="v-poApprDate" onclick="this.showPicker()"></div>
                             </div>
                             <div class="flex-row">
-                                <div class="form-group"><label>VendorID</label><input type="text" id="v-vendorId"></div>
-                                <div class="form-group"><label>Vendor</label><input type="text" id="v-supplier"></div>
+                                <div class="form-group"><label>VendorID</label><input type="text" id="v-vendorId" onchange="handleVendorAutoFill(this)"></div>
+                                <div class="form-group"><label>Vendor</label><input type="text" id="v-supplier" onchange="handleVendorAutoFill(this)"></div>
                             </div>
                             <div class="flex-row">
                                 <div class="form-group"><label>PI NO.</label><input type="text" id="v-piNo"></div>
@@ -614,6 +614,8 @@
                 let trackerDataset = [];
                 let materialCacheByCode = {};
                 let materialCacheByName = {};
+                let vendorCacheById = {};
+                let vendorCacheByName = {};
                 let dialog = null;
                 let isProcessing = false;
                 document.addEventListener('input', function(e) {
@@ -644,6 +646,25 @@
                         if (match) {
                             syncBinding('v-itemCode', match.code);
                             syncBinding('v-category', match.cat);
+                        }
+                    }
+                }
+
+                function handleVendorAutoFill(sourceElement) {
+                    if (!sourceElement || !sourceElement.value) return;
+                    let val = sourceElement.value.trim();
+                    
+                    if (sourceElement.id === 'v-vendorId') {
+                        let match = vendorCacheById[val.toUpperCase()];
+                        if (match) {
+                            syncBinding('v-supplier', match.name);
+                            if (match.email) syncBinding('v-vendorEmail', match.email);
+                        }
+                    } else if (sourceElement.id === 'v-supplier') {
+                        let match = vendorCacheByName[val.toLowerCase()];
+                        if (match) {
+                            syncBinding('v-vendorId', match.id);
+                            if (match.email) syncBinding('v-vendorEmail', match.email);
                         }
                     }
                 }
@@ -871,6 +892,24 @@
                                     if (code) {
                                         materialCacheByCode[code] = { desc: desc, cat: cat };
                                         materialCacheByName[desc.toLowerCase()] = { code: code, cat: cat };
+                                    }
+                                }
+                            }
+
+                            const vendSheet = context.workbook.worksheets.getItemOrNullObject("Vendor Master");
+                            await context.sync();
+                            if (!vendSheet.isNullObject) {
+                                const vendRange = vendSheet.getUsedRange();
+                                vendRange.load("values");
+                                await context.sync();
+                                let vendorData = vendRange.values;
+                                for (let i = 1; i < vendorData.length; i++) {
+                                    let vId = String(vendorData[i][0] || "").trim().toUpperCase();
+                                    let vName = String(vendorData[i][1] || "").trim();
+                                    let vEmail = String(vendorData[i][2] || "").trim();
+                                    if (vId && vName) {
+                                        vendorCacheById[vId] = { name: vName, email: vEmail };
+                                        vendorCacheByName[vName.toLowerCase()] = { id: vId, email: vEmail };
                                     }
                                 }
                             }
@@ -1247,6 +1286,27 @@
                                     appendRange.values = [[currentCode, currentDesc, currentCat]];
                                     materialCacheByCode[currentCode] = { desc: currentDesc, cat: currentCat };
                                     materialCacheByName[currentDesc.toLowerCase()] = { code: currentCode, cat: currentCat };
+                                }
+                            }
+
+                            let currentVId = String(payload.vendorId || "").trim().toUpperCase();
+                            let currentVName = String(payload.supplier || "").trim();
+                            let currentVEmail = String(payload.vendorEmail || "").trim();
+
+                            if (currentVId && currentVName && !vendorCacheById[currentVId]) {
+                                const vSheet = context.workbook.worksheets.getItemOrNullObject("Vendor Master");
+                                await context.sync();
+                                if (!vSheet.isNullObject) {
+                                    const vRange = vSheet.getUsedRange();
+                                    vRange.load("rowCount");
+                                    await context.sync();
+                                    
+                                    let nextVRow = vRange.rowCount;
+                                    let appendVRange = vSheet.getRangeByIndexes(nextVRow, 0, 1, 3);
+                                    appendVRange.values = [[currentVId, currentVName, currentVEmail]];
+                                    
+                                    vendorCacheById[currentVId] = { name: currentVName, email: currentVEmail };
+                                    vendorCacheByName[currentVName.toLowerCase()] = { id: currentVId, email: currentVEmail };
                                 }
                             }
 
