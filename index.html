@@ -1152,10 +1152,28 @@
 
                             div.style = `background: linear-gradient(to right, ${bg}, #ffffff 15%); border-left: 4px solid ${border}; border-top: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; border-radius: 6px; padding: 10px; margin-bottom: 8px; cursor: pointer;`;
 
-                            // Hydrate local storage with the entire dataset so the dialog can do search!
-                            div.onclick = function () {
-                                localStorage.setItem('ow_ctx_db', JSON.stringify({ raw: trackerDataset, activeRowIdx: item.rowIdx, activeRow: item.raw }));
-                                showActionForm();
+                            // Navigate Excel to the specific row and sync the form when a card is clicked
+                            div.onclick = async function () {
+                                showLoading(true);
+                                try {
+                                    await Excel.run(async (context) => {
+                                        const sheet = context.workbook.worksheets.getItem("Tracker");
+                                        // item.rowIdx is 1-based, getRangeByIndexes is 0-based
+                                        let targetRange = sheet.getRangeByIndexes(item.rowIdx - 1, 0, 1, 47);
+                                        targetRange.select(); // Move the Excel cursor to the correct row
+                                        await context.sync();
+                                    });
+
+                                    // Reset the cache index and force the form to pull the newly selected data instantly
+                                    lastRowIdx = -1; 
+                                    await loadSpecificRow();
+                                    showActionForm();
+                                    
+                                } catch (error) {
+                                    onError("Failed to load order: " + error.message);
+                                } finally {
+                                    showLoading(false);
+                                }
                             };
 
                             let subInfo = [];
