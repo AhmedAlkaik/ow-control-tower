@@ -15,7 +15,7 @@
             --primary-hover: #00133a;
             --success: #059669;
             --text: #1e293b;
-            --text-muted: #64748b
+            --text-muted: #64748b;
             --border: #e2e8f0;
             --ow-gold: #d4af37;
             /* Metallic Gold */
@@ -261,7 +261,7 @@
             color: var(--primary);
             border-bottom: 3px solid var(--primary);
         }
-            body.edit-mode .form-group { display: block !important; }
+        body.edit-mode .form-group { display: block !important; }
         body.edit-mode .flex-row { display: flex !important; }
         details { transition: all 0.3s ease; }
         body.edit-mode details { display: block !important; }
@@ -318,9 +318,7 @@
                         alt="Oriental Weavers Logo" class="ow-logo">
                     <div>
                         <h3>Control Tower</h3>
-                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 5px;">Contextual automation
-                            for
-                            procurement.</p>
+                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 5px;">Contextual automation for procurement.</p>
                     </div>
                 </div>
                 <div style="text-align: right;">
@@ -333,32 +331,23 @@
                 </div>
             </div>
 
-            <!-- HARD ROUTING BUTTON FOR GOOGLE SHEETS GRID -->
-            
-
-            <!-- LAUNCH ACTION POPUP BUTTON -->
             <button class="btn success" style="margin-bottom: 20px; font-size: 0.9rem;" onclick="showActionForm()">
                 ⚡ OPEN DATA ENTRY FORM
             </button>
 
-            <!-- SYSTEM LOGS -->
             <div class="loader" id="loader"></div>
             <div id="error-msg"></div>
 
-            <!-- VIEW: DASHBOARD -->
             <div id="view-dash">
 
-                <!-- SEARCH DASHBOARD -->
                 <div style="margin-bottom: 20px;">
                     <input type="text" id="global-search" placeholder="Search Material, PO, BL..."
                         style="width: 100%; box-sizing: border-box; border-radius: 8px; border: 2px solid var(--border);"
                         onkeyup="if(event.key === 'Enter') executeSearch(this.value)">
                     <p style="font-size: 0.70rem; color: var(--text-muted); margin-top: 5px; text-align: center;">Press
-                        Enter to
-                        search entire grid.</p>
+                        Enter to search entire grid.</p>
                 </div>
 
-                <!-- NEW KPI DASHBOARD -->
                 <div id="kpi-panel" class="kpi-grid" style="grid-template-columns: 1fr 1fr 1fr;">
                     <div class="kpi-card kpi-all"
                         style="grid-column: span 3; background: linear-gradient(135deg, #00205b 0%, #00133a 100%); border-color: #00205b; color: white;"
@@ -391,7 +380,6 @@
                     </div>
                 </div>
 
-                <!-- SIDEBAR SEARCH RESULTS REPOSITORY -->
                 <div id="results-panel" style="display: none;">
                     <div
                         style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
@@ -401,51 +389,42 @@
                             onclick="closeResults()">Clear</button>
                     </div>
                     <div id="results-list" style="max-height: 350px; overflow-y: auto;">
-                        <!-- Javascript injects cards here -->
                     </div>
                 </div>
             </div>
 
-
             <!-- FORM VIEW (SPA mode) -->
             <div id="view-form" style="display: none; animation: fadeIn 0.3s ease; ">
                 <div style="padding-bottom: 15px;">
-    <a href="#" onclick="showDashboard()" style="color: var(--text-muted); text-decoration: none; font-size: 0.8rem; font-weight: 600;">← Back to Dashboard</a>
-</div>
-                <!-- CONTEXTUAL ENGINE -->
+                    <a href="#" onclick="showDashboard()" style="color: var(--text-muted); text-decoration: none; font-size: 0.8rem; font-weight: 600;">← Back to Dashboard</a>
+                </div>
+                
                 <div id="top-card" class="info-card"
                     style="border-left: 4px solid var(--ow-gold); display: flex; justify-content: space-between; flex-direction: column; gap: 10px;">
                     <div>
-                        <div style="font-size: 0.70rem; color: var(--text-muted); text-transform: uppercase;">Active
-                            Workspace</div>
-                        <div id="ctx-po" style="font-weight: 700; font-size: 1rem; color: var(--primary);">
-                            Synchronizing...</div>
+                        <div style="font-size: 0.70rem; color: var(--text-muted); text-transform: uppercase;">Active Workspace</div>
+                        <div id="ctx-po" style="font-weight: 700; font-size: 1rem; color: var(--primary);">Synchronizing...</div>
                         <div id="ctx-supplier" style="font-size: 0.80rem; font-weight: 600; margin-top: 2px;">-</div>
                         <div id="ctx-sub" style="font-size: 0.70rem; color: var(--text-muted); margin-top: 2px;"></div>
                         <div id="ctx-state" class="status-badge" style="margin-top: 6px;">Detecting...</div>
                     </div>
                     <div style="text-align: right;">
                         <label style="display: flex; align-items: center; gap: 5px; font-weight: bold; color: var(--primary); font-size: 0.8rem; cursor: pointer;">
-                                <input type="checkbox" id="edit-mode-toggle" onchange="toggleEditMode(this.checked)">✏️ Edit All
-                            </label>
+                            <input type="checkbox" id="edit-mode-toggle" onchange="toggleEditMode(this.checked)">✏️ Edit All
+                        </label>
                     </div>
                 </div>
 
-
-
-
                 <div id="completed-msg"
                     style="display: none; text-align: center; padding: 12px; color: var(--success); font-weight: bold;">
-                    âœ… This order
-                    is Completed. No further actions required.</div>
+                    ✅ This order is Completed. No further actions required.</div>
 
                 <div id="app-body" style="display: none;">
 
                     <div class="info-card"
                         style="border: 2px solid var(--warning); background-color: #fffbeb; padding: 12px; margin-bottom: 15px;">
                         <div style="font-size: 0.9rem; font-weight: bold; color: var(--warning); margin-bottom: 8px;">
-                            â±ï¸ Critical
-                            Date Updater</div>
+                            ⏱️ Critical Date Updater</div>
                         <div style="display: flex; flex-direction: column; gap: 10px;">
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                                 <div class="form-group" style="margin: 0;">
@@ -575,40 +554,30 @@
                         </div>
                     </details>
 
-                    <div class="form-group" style="margin-top:10px;">
-                        <label>Internal Comments / Notes</label>
-                        <input type="text" id="v-comments">
-                    </div>
-
                     <div style="position: sticky; bottom: 0; background: var(--bg-color); padding: 15px 0; border-top: 1px solid var(--border); margin-top: 20px;">
-                    <div style="text-align: right; margin-bottom: 10px;">
-                        <a href="#" onclick="autoFillDevMode()" style="font-size: 0.75rem; color: #6366f1; text-decoration: underline; font-weight: 600;">🧪 Auto-Fill Dev Data</a>
-                    </div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-                        <button class="btn" style="background-color: white; color: var(--primary); border: 1px solid var(--primary); margin: 0;" onclick="submitData(false)">💾 Save</button>
-                        <button class="btn success" id="btn-advance" onclick="handleAdvanceClick()" style="margin: 0;">🚀 Advance</button>
-                    </div>
-                    <div style="text-align: center;">
-                        <a href="#" onclick="archiveOrder()" style="font-size: 0.75rem; color: #ef4444; font-weight: 600; text-decoration: underline;">🗑️ Terminate / Archive Order</a>
+                        <div style="text-align: right; margin-bottom: 10px;">
+                            <a href="#" onclick="autoFillDevMode()" style="font-size: 0.75rem; color: #6366f1; text-decoration: underline; font-weight: 600;">🧪 Auto-Fill Dev Data</a>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                            <button class="btn" style="background-color: white; color: var(--primary); border: 1px solid var(--primary); margin: 0;" onclick="submitData(false)">💾 Save</button>
+                            <button class="btn success" id="btn-advance" onclick="handleAdvanceClick()" style="margin: 0;">🚀 Advance</button>
+                        </div>
+                        <div style="text-align: center;">
+                            <a href="#" onclick="archiveOrder()" style="font-size: 0.75rem; color: #ef4444; font-weight: 600; text-decoration: underline;">🗑️ Terminate / Archive Order</a>
+                        </div>
                     </div>
                 </div>
-                </div>
-
 
             </div>
 
             <script>
-
                 // SPA FORM VARIABLES
                 let currentRow = -1;
                 let currentState = "Initiated Order";
                 let currentPoNo = "";
                 let currentPrNo = "";
-                let currentRowData = new Array(47).fill(""); // Stores the active live data
-                let lastCtxRaw = null; // Cache last row data for form toggling
-
-
-
+                let currentRowData = new Array(47).fill(""); 
+                let lastCtxRaw = null; 
 
                 let currentBuyerFilter = "ALL";
                 let trackerDataset = [];
@@ -618,18 +587,20 @@
                 let vendorCacheByName = {};
                 let dialog = null;
                 let isProcessing = false;
+
                 document.addEventListener('input', function(e) {
                     if (e.target && e.target.id && e.target.id.startsWith('v-')) {
                         e.target.classList.add('dirty-input');
                     }
                 });
+                
                 document.addEventListener('change', function(e) {
                     if (e.target && e.target.id && e.target.id.startsWith('v-')) {
                         e.target.classList.add('dirty-input');
                     }
                 });
+                
                 let lastRowIdx = -1;
-
                 let selectionTimeout = null;
 
                 function handleMaterialAutoFill(sourceElement) {
@@ -702,13 +673,12 @@
                     if (selectionTimeout) clearTimeout(selectionTimeout);
                     selectionTimeout = setTimeout(() => {
                         loadSpecificRow();
-                    }, 250); // Wait 250ms after the user stops moving before syncing
+                    }, 250);
                 }
 
                 Office.onReady((info) => {
                     initApp();
                 });
-
 
                 async function loadSpecificRow() {
                     if (isProcessing) return;
@@ -735,7 +705,8 @@
                             let data = range.values[0];
                             let state = data[1] || "Initiated Order";
                             
-                            if (!data[2] && !data[3] && !data[15]) state = "Initiated Order";
+                            // 2: PR NO, 3: PR Date, 14: Item Description
+                            if (!data[2] && !data[3] && !data[14]) state = "Initiated Order";
 
                             currentRowData = data;
 
@@ -768,7 +739,7 @@
 
                             for (let i = 1; i < rowCount; i++) {
                                 let state = values[i][1];
-                                let bg = '#ffffff'; // default
+                                let bg = '#ffffff'; 
 
                                 if (state === "In Transit") bg = '#d0e3ff';
                                 else if (state === "Under Clearance") bg = '#fef7e0';
@@ -777,7 +748,6 @@
                                 else if (state === "Archived") bg = '#f1f5f9';
                                 else if (state === "In Production") bg = '#fffbeb';
 
-                                // We format the whole row matching active data bounds
                                 let rowRange = sheet.getRangeByIndexes(i, 0, 1, 47);
                                 rowRange.format.fill.color = bg;
                             }
@@ -793,12 +763,10 @@
                             d.style.display='block'; 
                             d.open=true; 
                         } else { 
-                            // Only isolate phases if not archived/completed lock
                             enforcePhaseIsolation(currentState, false); 
                         } 
                     });
                     
-                    // Force the app-body to show if we want to edit a completed/archived order!
                     if (isChecked) {
                         document.getElementById('app-body').style.display = 'block';
                     } else if (currentState === "Archived" || currentState === "Completed" || currentState === "Closed") {
@@ -806,7 +774,7 @@
                     }
                 }
 
-                                async function fetchDropdowns() {
+                async function fetchDropdowns() {
                     try {
                         await Excel.run(async (context) => {
                             const sheet = context.workbook.worksheets.getItemOrNullObject("Dropdowns");
@@ -830,7 +798,7 @@
                                 function popSel(id, arr) {
                                     let el = document.getElementById(id);
                                     if (!el) return;
-                                    let currentVal = el.value; // Store the currently selected value before flushing
+                                    let currentVal = el.value; 
                                     el.innerHTML = '<option value=""></option>';
                                     arr.forEach(val => {
                                         if (val) {
@@ -840,7 +808,6 @@
                                         }
                                     });
                                     
-                                    // If what they had is gone, append it gracefully to prevent data loss.
                                     if (currentVal) {
                                         let exists = Array.from(el.options).some(o => o.value === currentVal);
                                         if (!exists) {
@@ -863,7 +830,6 @@
                 async function initApp() {
                     showLoading(true);
                     try {
-                        
                         let userEmail = localStorage.getItem('ow_real_user') || "";
                         if (!userEmail) {
                             try {
@@ -875,10 +841,9 @@
                         }
                         
                         if (!userEmail || userEmail.includes('test.buyer')) {
-                            // If auto-detection absolutely fails (usually due to iframe SSO blocking on Web), we trigger the native modal
                             document.getElementById('identity-modal').style.display = 'flex';
                             showLoading(false);
-                            return; // Halt initialisation until identity is confirmed
+                            return; 
                         }
                         
                         localStorage.setItem('ow_current_user', userEmail);
@@ -889,18 +854,14 @@
 
                             if (sheet.isNullObject) {
                                 showLoading(false);
-
                                 document.getElementById('error-msg').innerText = "Tracker sheet not found.";
                                 return;
                             }
                             
-                            // Native Office.js event listeners attached cleanly
                             sheet.onSelectionChanged.add(handleSelectionChange);
                             sheet.onChanged.add(handleSelectionChange);
 
                             trackerDataset = await fetchSheetDataInChunks(context, "Tracker") || [];
-
-                            // Load Dropdowns natively
                             await fetchDropdowns();
 
                             const matSheet = context.workbook.worksheets.getItemOrNullObject("Material Master");
@@ -945,9 +906,9 @@
                             let buyers = [];
                             if (trackerDataset.length > 1) {
                                 for (let i = 1; i < trackerDataset.length; i++) {
+                                    // 43 = BuyerEmail
                                     let b = trackerDataset[i][43];
                                     if (b && String(b).trim() !== "") {
-                                        
                                         let cleanB = String(b).trim();
                                         if (!cleanB.includes('test.buyer')) {
                                             buyers.push(cleanB);
@@ -981,11 +942,9 @@
                             }
 
                             currentBuyerFilter = select.value;
-                            // Automatically filter it
                             applyFilter('ALL');
                             loadKPIsFromMemory(trackerDataset, false);
                         });
-                        // syncRowColors(); // trigger background color sync
                     } catch (error) {
                         onError(error);
                     }
@@ -998,12 +957,10 @@
                             trackerDataset = await fetchSheetDataInChunks(context, "Tracker") || [];
                             loadKPIsFromMemory(trackerDataset, silent);
                         });
-                        // syncRowColors();
                     } catch (error) {
                         if (!silent) onError(error);
                     }
                 }
-
 
                 function loadKPIsFromMemory(data, silent) {
                     let counts = {
@@ -1018,6 +975,7 @@
                     if (data && data.length > 1) {
                         for (let i = 1; i < data.length; i++) {
                             let state = String(data[i][1] || "Initiated Order").trim();
+                            // 43 = BuyerEmail
                             let buyer = data[i][43];
                             let safeBuyer = buyer ? String(buyer).trim() : "";
                             if (currentBuyerFilter && currentBuyerFilter !== "ALL" && safeBuyer !== "" && safeBuyer !== currentBuyerFilter) continue;
@@ -1044,8 +1002,6 @@
                     loadKPIsFromMemory(trackerDataset, false);
                 }
 
-
-
                 function getStateColorConfig(state) {
                     if (state === "In Transit") return { bg: '#d0e3ff', border: '#3b82f6', text: '#1e3a8a' };
                     if (state === "Under Clearance") return { bg: '#fef7e0', border: '#f59e0b', text: '#78350f' };
@@ -1067,6 +1023,7 @@
                         for (let i = 1; i < data.length; i++) {
                             let row = data[i];
                             let state = row[1] || "Initiated Order";
+                            // 43 = BuyerEmail
                             let buyer = row[43];
                             let safeBuyer = buyer ? String(buyer).trim() : "";
                             if (currentBuyerFilter && currentBuyerFilter !== "ALL" && safeBuyer !== "" && safeBuyer !== currentBuyerFilter) continue;
@@ -1094,7 +1051,6 @@
                     }
                 }
 
-
                 function applyFilter(stateFilter) {
                     document.getElementById('global-search').value = '';
                     let data = trackerDataset;
@@ -1103,10 +1059,10 @@
                     for (let i = 1; i < data.length; i++) {
                         let row = data[i];
                         let state = row[1] || "Initiated Order";
+                        // 43 = BuyerEmail
                         let buyer = row[43];
                         let safeBuyer = buyer ? String(buyer).trim() : "";
                         
-                        // Ensure buyer match if filter is active
                         if (currentBuyerFilter && currentBuyerFilter !== "ALL" && safeBuyer !== "" && safeBuyer !== currentBuyerFilter) continue;
                         
                         let match = false;
@@ -1134,7 +1090,6 @@
 
                 function renderResults(res) {
                     showLoading(false);
-
                     document.getElementById('kpi-panel').style.display = 'none';
                     document.getElementById('results-panel').style.display = 'block';
 
@@ -1152,23 +1107,18 @@
 
                             div.style = `background: linear-gradient(to right, ${bg}, #ffffff 15%); border-left: 4px solid ${border}; border-top: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; border-radius: 6px; padding: 10px; margin-bottom: 8px; cursor: pointer;`;
 
-                            // Navigate Excel to the specific row and sync the form when a card is clicked
                             div.onclick = async function () {
                                 showLoading(true);
                                 try {
                                     await Excel.run(async (context) => {
                                         const sheet = context.workbook.worksheets.getItem("Tracker");
-                                        // item.rowIdx is 1-based, getRangeByIndexes is 0-based
                                         let targetRange = sheet.getRangeByIndexes(item.rowIdx - 1, 0, 1, 47);
-                                        targetRange.select(); // Move the Excel cursor to the correct row
+                                        targetRange.select(); 
                                         await context.sync();
                                     });
-
-                                    // Reset the cache index and force the form to pull the newly selected data instantly
                                     lastRowIdx = -1; 
                                     await loadSpecificRow();
                                     showActionForm();
-                                    
                                 } catch (error) {
                                     onError("Failed to load order: " + error.message);
                                 } finally {
@@ -1210,7 +1160,6 @@
                         if (viewDash) viewDash.style.display = 'none';
                         viewForm.style.display = 'block';
 
-                        // Use the globally stored row data, or default to empty if a new row
                         if (lastRowIdx > 0 && currentRowData && currentRowData.length > 0) {
                             processRowSelection(lastRowIdx + 1, currentRowData);
                         } else {
@@ -1226,7 +1175,6 @@
                     document.getElementById('view-dash').style.display = 'block';
                 } 
 
-
                 async function processMessage(arg) {
                     let payloadStr = arg.message;
                     if (!payloadStr) return;
@@ -1238,7 +1186,7 @@
                         await Excel.run(async (context) => {
                             const sheet = context.workbook.worksheets.getItem("Tracker");
 
-                                                        const mappings = {
+                            const mappings = {
                                 'category': 0, 'state': 1, 'prNo': 2, 'prDate': 3, 'rfq': 4,
                                 'poNo': 5, 'poDate': 6, 'poApprDate': 7, 'reqDelDate': 8,
                                 'company': 9, 'vendorId': 10, 'supplier': 11, 'piNo': 12, 'itemCode': 13,
@@ -1253,18 +1201,15 @@
 
                             let targetRowIdx = -1;
 
-                            // 1. Prioritize explicitly selected rows from the UI (convert 1-based back to 0-based for Excel)
                             if (payload.targetRow && payload.targetRow !== -1) {
                                 targetRowIdx = payload.targetRow - 1;
                             }
-                            // 2. If 'New' was clicked with no selection, append to bottom
                             else if (payload.action === 'create') {
                                 const usedRange = sheet.getUsedRange();
                                 usedRange.load("rowCount");
                                 await context.sync();
                                 targetRowIdx = usedRange.rowCount;
                             }
-                            // 3. Fallback: Search by PO / PR
                             else {
                                 const usedRange = sheet.getUsedRange();
                                 usedRange.load("values");
@@ -1346,7 +1291,6 @@
                                 }
                             }
 
-                            // Single-row color sync
                             let state = newValues[0][1];
                             let bg = '#ffffff';
                             if (state === "In Transit") bg = '#d0e3ff';
@@ -1369,10 +1313,9 @@
                             }
                         } catch(ee) {}
 
-                        // INSTANTLY RELOAD THE UI FORM!
                         lastRowIdx = -1;
                         loadSpecificRow();
-                        fetchTrackerData(true); // reload memory manually
+                        fetchTrackerData(true); 
                     } catch (err) {
                         onError("Failed to execute Excel update: " + err.message);
                     }
@@ -1382,9 +1325,9 @@
                     const l = document.getElementById('loader');
                     if (l) l.style.display = show ? 'block' : 'none';
                 }
+                
                 function onError(err) {
                     showLoading(false);
-
                     const e = document.getElementById('error-msg');
                     let msg = typeof err === 'string' ? err : (err.message || 'An error occurred');
                     if (e) e.innerText = msg;
@@ -1393,13 +1336,11 @@
                 function processRowSelection(rowIdx, selectedRow) {
                     const formatIfDate = (val) => {
                         if (typeof val === 'number') {
-                            // Excel dates in the 2020s are around 44000-48000.
-                            // If a user types 30 for lead time, it's NOT a date!
                             if (val > 30000 && val < 90000) {
                                 const d = new Date(Math.round((val - 25569) * 86400 * 1000));
                                 return d.toISOString().split('T')[0];
                             }
-                            return String(val); // Return normal numbers normally!
+                            return String(val); 
                         }
                         return val ? String(val) : "";
                     };
@@ -1409,6 +1350,7 @@
                     currentPrNo = String(data[2] || "");
 
                     let stateStr = data[1] || "Initiated Order";
+                    // 2: PR, 3: PR Date, 14: Desc
                     if (!data[2] && !data[3] && !data[14]) stateStr = "Initiated Order";
 
                     let ctx = {
@@ -1422,7 +1364,7 @@
                         piNo: formatIfDate(data[12]),
                         delTerm: formatIfDate(data[25]),
                         colorConfig: getStateColorConfig(stateStr),
-                                                rawObj: {
+                        rawObj: {
                             category: formatIfDate(data[0]),
                             state: formatIfDate(data[1]),
                             prNo: formatIfDate(data[2]),
@@ -1474,17 +1416,6 @@
                     };
 
                     renderContext(ctx);
-                }
-
-
-
-                function getStateColorConfig(state) {
-                    if (state === "In Transit") return { bg: '#d0e3ff', border: '#3b82f6', text: '#1e3a8a' };
-                    if (state === "Under Clearance") return { bg: '#fef7e0', border: '#f59e0b', text: '#78350f' };
-                    if (state === "Completed") return { bg: '#bdf4cb', border: '#10b981', text: '#064e3b' };
-                    if (state === "Initiated Order") return { bg: '#f3e8ff', border: '#8b5cf6', text: '#4c1d95' };
-                    if (state === "Archived") return { bg: '#f1f5f9', border: '#94a3b8', text: '#475569' };
-                    return { bg: '#ffffff', border: '#fbbf24', text: '#92400e' };
                 }
 
                 function renderContext(ctx) {
@@ -1554,19 +1485,13 @@
                     }
                 }
 
-                document.addEventListener('input', function (e) {
-                    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
-                        e.target.classList.add('dirty-input');
-                    }
-                });
-
                 function hydrateInputs(data, forceWipe) {
-                                        const map = {
+                    const map = {
                         'v-category': 'category', 'v-prNo': 'prNo', 'v-prDate': 'prDate', 'v-rfq': 'rfq',
                         'v-poNo': 'poNo', 'v-poDate': 'poDate', 'v-poApprDate': 'poApprDate',
                         'v-reqDelDate': 'reqDelDate', 'v-company': 'company', 'v-vendorId': 'vendorId',
                         'v-supplier': 'supplier', 'v-piNo': 'piNo', 'v-itemCode': 'itemCode', 'v-desc': 'desc',
-                        'v-qty': 'qty', 'v-unit': 'unit', 'v-fob': 'fob', 'v-cif': 'cif',
+                        'v-qty': 'qty', 'v-piQty': 'piQty', 'v-unit': 'unit', 'v-fob': 'fob', 'v-cif': 'cif',
                         'v-value': 'value', 'v-currency': 'currency', 'v-productionDate': 'productionDate',
                         'v-payTerm': 'payTerm', 'v-acid': 'acid', 'v-delTerm': 'delTerm', 'v-shipmentNo': 'shipmentNo',
                         'v-commInv': 'commInv', 'v-blNo': 'blNo', 'v-etd': 'etd', 'v-eta': 'eta',
@@ -1580,7 +1505,6 @@
                     for (let [id, key] of Object.entries(map)) {
                         let el = document.getElementById(id);
                         if (!el) continue;
-                        // IGNORE HYDRATION IF USER IS ACTIVELY TYPING IN IT
                         if (el.classList.contains('dirty-input')) continue;
 
                         if (data[key] !== undefined) {
@@ -1642,7 +1566,7 @@
                                 msgEl = document.createElement('div');
                                 msgEl.id = compMsgId;
                                 msgEl.style = "text-align: center; color: var(--success); font-weight: bolder; padding: 15px; border: 1px dashed var(--success); border-radius: 8px; margin-bottom: 10px;";
-                                msgEl.innerHTML = "âœ… All fields for this phase are currently filled!";
+                                msgEl.innerHTML = "✅ All fields for this phase are currently filled!";
                                 let contentDiv = phaseObj.el.querySelector('.details-content');
                                 if (contentDiv) contentDiv.appendChild(msgEl);
                             }
@@ -1688,7 +1612,6 @@
                     }
                 }
 
-
                 function autoFillDevMode() {
                     const dataMap = {
                         'v-company': 'OWC',
@@ -1727,7 +1650,7 @@
                             } else if (dataMap[id]) {
                                 el.value = dataMap[id];
                             } else if (el.tagName === 'SELECT') {
-                                el.selectedIndex = 1; // pick first val
+                                el.selectedIndex = 1; 
                             }
                             el.classList.add('dirty-input');
                         }
@@ -1767,7 +1690,6 @@
                     executeSave(targetState);
                 }
 
-
                 async function executeSave(targetState = null) {
                     currentPoNo = document.getElementById('v-poNo').value || currentPoNo;
                     let currentPrNo = document.getElementById('v-prNo').value;
@@ -1777,12 +1699,11 @@
                         return;
                     }
 
-
                     document.getElementById('error-msg').innerText = '';
 
                     let payload = {
                         action: (currentRow === -1) ? "create" : "update",
-                        targetRow: currentRow, // Explicitly pass the active row index
+                        targetRow: currentRow, 
                         poNo: currentPoNo,
                         prNo: currentPrNo,
                         targetState: targetState || ""
@@ -1804,7 +1725,6 @@
 
                     try {
                         processMessage({ message: JSON.stringify(payload) });
-
                     } catch (error) {
                         onError("Office IPC Error: " + error.message);
                     }
@@ -1814,20 +1734,8 @@
                     if (!confirm("⚠️ Are you sure you want to Archive/Cancel this order?")) return;
                     processMessage({ message: JSON.stringify({ action: "archive", poNo: currentPoNo, prNo: document.getElementById('v-prNo').value }) });
                 }
-
-                function onError(err) {
-
-
-                    let msg = typeof err === 'string' ? err : (err.message || 'An error occurred');
-                    let errorEl = document.getElementById('error-msg');
-                    // Changed from --danger to red hex code to ensure it renders correctly
-                    errorEl.style.color = "#ef4444";
-                    errorEl.innerText = msg;
-                }
             </script>
         </div>
-        
+    </div>
 </body>
-
-
 </html>
