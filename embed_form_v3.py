@@ -83,7 +83,7 @@ js_48_replacements = r'''            currentPoNo = String(data[5] || "");
                     comments: formatIfDate(data[46])
                 }
             };'''
-js_functions = re.sub(r'currentPoNo = String\(data\[8\].*?leadTime: formatIfDate\(data\[35\]\)\n\s*\}\n\s*\};', js_48_replacements, js_functions, flags=re.DOTALL)
+js_functions = re.sub(r'currentPoNo\s*=\s*String\(data\[\d+\].*?rawObj:\s*\{.*?\n\s*\}\n\s*\};', js_48_replacements, js_functions, flags=re.DOTALL)
 
 js_functions = js_functions.replace("'v-docArrival': 'docArrival', ", "")
 js_functions = js_functions.replace("'v-docArrival': '2026-09-08',", "")
