@@ -555,9 +555,7 @@
                     </details>
 
                     <div style="position: sticky; bottom: 0; background: var(--bg-color); padding: 15px 0; border-top: 1px solid var(--border); margin-top: 20px;">
-                        <div style="text-align: right; margin-bottom: 10px;">
-                            <a href="#" onclick="autoFillDevMode()" style="font-size: 0.75rem; color: #6366f1; text-decoration: underline; font-weight: 600;">🧪 Auto-Fill Dev Data</a>
-                        </div>
+
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
                             <button id="btn-save" class="btn" style="background-color: white; color: var(--primary); border: 1px solid var(--primary); margin: 0;" onclick="submitData(false)">💾 Save</button>
                             <button class="btn success" id="btn-advance" onclick="handleAdvanceClick()" style="margin: 0;">🚀 Advance</button>
@@ -1627,50 +1625,7 @@
                     }
                 }
 
-                function autoFillDevMode() {
-                    const dataMap = {
-                        'v-company': 'OWC',
-                        'v-prNo': 'TEST-' + Math.floor(Math.random() * 10000),
-                        'v-prDate': '2026-08-01',
-                        'v-desc': 'Dev Test Item',
-                        'v-qty': '1000',
-                        'v-reqDelDate': '2026-09-01',
-                        'v-supplier': 'Global AutoFill Ltd',
-                        'v-vendorEmail': 'vendor@test.com',
-                        'v-poNo': 'PO-' + Math.floor(Math.random() * 100000),
-                        'v-poApprDate': '2026-08-06',
-                        'v-leadTime': '30',
-                        'v-etd': '2026-08-15',
-                        'v-urgent-etd': '2026-08-15',
-                        'v-eta': '2026-09-05',
-                        'v-urgent-eta': '2026-09-05',
-                        'v-blNo': 'BL-8888',
-                        'v-acid': 'ACID-9999',
-                        'v-commInv': 'INV-7777',
-                        'v-shipRelease': '2026-09-10',
-                        'v-docArrival': '2026-09-08'
-                    };
 
-                    let reqFields = [];
-                    if (currentState === "Initiated Order") reqFields = ['v-prNo', 'v-prDate', 'v-reqDelDate', 'v-company', 'v-itemCode', 'v-desc', 'v-leadTime'];
-                    else if (currentState === "In Production") reqFields = ['v-poNo', 'v-poDate', 'v-poApprDate', 'v-vendorId', 'v-supplier', 'v-qty', 'v-unit', 'v-value', 'v-currency', 'v-vendorEmail'];
-                    else if (currentState === "In Transit") reqFields = ['v-estReadiness', 'v-payTerm', 'v-acid', 'v-delTerm', 'v-shipmentNo', 'v-commInv', 'v-blNo', 'v-etd', 'v-eta'];
-                    else if (currentState === "Under Clearance") reqFields = ['v-courierNo', 'v-courierDate', 'v-bank', 'v-shipRelease', 'v-grDate'];
-
-                    reqFields.forEach(id => {
-                        let el = document.getElementById(id);
-                        if (el && !el.value) {
-                            if (id === 'v-buyerEmail') {
-                                el.value = localStorage.getItem('ow_current_user') || 'dev@orientalweavers.com';
-                            } else if (dataMap[id]) {
-                                el.value = dataMap[id];
-                            } else if (el.tagName === 'SELECT') {
-                                el.selectedIndex = 1; 
-                            }
-                            el.classList.add('dirty-input');
-                        }
-                    });
-                }
 
                 function validatePhaseAdvancement(nextState) {
                     let requiredFields = [];
