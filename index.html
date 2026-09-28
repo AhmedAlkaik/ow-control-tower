@@ -559,7 +559,7 @@
                             <a href="#" onclick="autoFillDevMode()" style="font-size: 0.75rem; color: #6366f1; text-decoration: underline; font-weight: 600;">🧪 Auto-Fill Dev Data</a>
                         </div>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-                            <button class="btn" style="background-color: white; color: var(--primary); border: 1px solid var(--primary); margin: 0;" onclick="submitData(false)">💾 Save</button>
+                            <button id="btn-save" class="btn" style="background-color: white; color: var(--primary); border: 1px solid var(--primary); margin: 0;" onclick="submitData(false)">💾 Save</button>
                             <button class="btn success" id="btn-advance" onclick="handleAdvanceClick()" style="margin: 0;">🚀 Advance</button>
                         </div>
                         <div style="text-align: center;">
@@ -588,17 +588,16 @@
                 let dialog = null;
                 let isProcessing = false;
 
-                document.addEventListener('input', function(e) {
+                let inputDebounceTimers = {};
+                function markInputDirty(e) {
                     if (e.target && e.target.id && e.target.id.startsWith('v-')) {
                         e.target.classList.add('dirty-input');
+                        if (inputDebounceTimers[e.target.id]) clearTimeout(inputDebounceTimers[e.target.id]);
+                        inputDebounceTimers[e.target.id] = setTimeout(() => {}, 400);
                     }
-                });
-                
-                document.addEventListener('change', function(e) {
-                    if (e.target && e.target.id && e.target.id.startsWith('v-')) {
-                        e.target.classList.add('dirty-input');
-                    }
-                });
+                }
+                document.addEventListener('input', markInputDirty);
+                document.addEventListener('change', markInputDirty);
                 
                 let lastRowIdx = -1;
                 let selectionTimeout = null;
@@ -1316,8 +1315,24 @@
                         lastRowIdx = -1;
                         loadSpecificRow();
                         fetchTrackerData(true); 
+                        
+                        document.querySelectorAll('details').forEach(d => {
+                            if (d.open) d.open = false;
+                        });
+                        
+                        if (saveBtn) {
+                            saveBtn.innerText = "✅ Saved";
+                            setTimeout(() => {
+                                saveBtn.innerText = originalText;
+                                saveBtn.disabled = false;
+                            }, 2000);
+                        }
                     } catch (err) {
                         onError("Failed to execute Excel update: " + err.message);
+                        if (saveBtn) {
+                            saveBtn.innerText = originalText;
+                            saveBtn.disabled = false;
+                        }
                     }
                 }
 
@@ -1505,7 +1520,7 @@
                     for (let [id, key] of Object.entries(map)) {
                         let el = document.getElementById(id);
                         if (!el) continue;
-                        if (el.classList.contains('dirty-input')) continue;
+                        if (el.classList.contains('dirty-input') || document.activeElement === el) continue;
 
                         if (data[key] !== undefined) {
                             let sheetVal = String(data[key] || "");
@@ -1691,6 +1706,13 @@
                 }
 
                 async function executeSave(targetState = null) {
+                    const saveBtn = document.getElementById('btn-save');
+                    let originalText = "💾 Save";
+                    if (saveBtn) {
+                        originalText = saveBtn.innerText;
+                        saveBtn.innerText = "⏳ Saving...";
+                        saveBtn.disabled = true;
+                    }
                     currentPoNo = document.getElementById('v-poNo').value || currentPoNo;
                     let currentPrNo = document.getElementById('v-prNo').value;
 
