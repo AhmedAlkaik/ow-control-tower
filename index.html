@@ -1318,18 +1318,20 @@
                             if (d.open) d.open = false;
                         });
                         
-                        if (saveBtn) {
-                            saveBtn.innerText = "✅ Saved";
+                        let pBtn = document.getElementById('btn-save');
+                        if (pBtn) {
+                            pBtn.innerText = "✅ Saved";
                             setTimeout(() => {
-                                saveBtn.innerText = originalText;
-                                saveBtn.disabled = false;
+                                pBtn.innerText = "💾 Save";
+                                pBtn.disabled = false;
                             }, 2000);
                         }
                     } catch (err) {
                         onError("Failed to execute Excel update: " + err.message);
-                        if (saveBtn) {
-                            saveBtn.innerText = originalText;
-                            saveBtn.disabled = false;
+                        let pBtn = document.getElementById('btn-save');
+                        if (pBtn) {
+                            pBtn.innerText = "💾 Save";
+                            pBtn.disabled = false;
                         }
                     }
                 }
@@ -1660,20 +1662,19 @@
                     executeSave(targetState);
                 }
 
-                async function executeSave(targetState = null) {
-                    const saveBtn = document.getElementById('btn-save');
-                    let originalText = "💾 Save";
-                    if (saveBtn) {
-                        originalText = saveBtn.innerText;
-                        saveBtn.innerText = "⏳ Saving...";
-                        saveBtn.disabled = true;
-                    }
+                                async function executeSave(targetState = null) {
                     currentPoNo = document.getElementById('v-poNo').value || currentPoNo;
                     let currentPrNo = document.getElementById('v-prNo').value;
 
                     if (!currentPoNo && !currentPrNo) {
                         onError("Missing Identifier. Please enter a PR Number or PO Number to create a record.");
                         return;
+                    }
+
+                    const saveBtn = document.getElementById('btn-save');
+                    if (saveBtn) {
+                        saveBtn.innerText = "⏳ Saving...";
+                        saveBtn.disabled = true;
                     }
 
                     document.getElementById('error-msg').innerText = '';
