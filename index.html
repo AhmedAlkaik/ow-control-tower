@@ -673,6 +673,48 @@
                     }, 250);
                 }
 
+                async function handleDataChange(event) {
+                    // Update UI if the active row changed natively
+                    handleSelectionChange(event);
+                    
+                    try {
+                        await Excel.run(async (context) => {
+                            const sheet = context.workbook.worksheets.getItem("Tracker");
+                            let range = sheet.getRange(event.address);
+                            range.load(["rowIndex", "rowCount"]);
+                            await context.sync();
+                            
+                            let startRow = range.rowIndex;
+                            let rowCount = range.rowCount;
+                            
+                            if (startRow === 0) { 
+                                if (rowCount === 1) return;
+                                startRow = 1;
+                                rowCount -= 1;
+                            }
+                            
+                            let rowRange = sheet.getRangeByIndexes(startRow, 0, rowCount, 47);
+                            rowRange.load("values");
+                            await context.sync();
+                            
+                            for (let i = 0; i < rowCount; i++) {
+                                let state = rowRange.values[i][1];
+                                let bg = '#ffffff';
+                                if (state === "In Transit") bg = '#d0e3ff';
+                                else if (state === "Under Clearance") bg = '#fef7e0';
+                                else if (state === "Completed") bg = '#bdf4cb';
+                                else if (state === "Initiated Order") bg = '#f3e8ff';
+                                else if (state === "Archived") bg = '#f1f5f9';
+                                else if (state === "In Production") bg = '#fffbeb';
+                                
+                                let singleRow = sheet.getRangeByIndexes(startRow + i, 0, 1, 47);
+                                singleRow.format.fill.color = bg;
+                            }
+                            await context.sync();
+                        });
+                    } catch(e) {}
+                }
+
                 Office.onReady((info) => {
                     initApp();
                 });
@@ -856,7 +898,7 @@
                             }
                             
                             sheet.onSelectionChanged.add(handleSelectionChange);
-                            sheet.onChanged.add(handleSelectionChange);
+                            sheet.onChanged.add(handleDataChange);
 
                             trackerDataset = await fetchSheetDataInChunks(context, "Tracker") || [];
                             await fetchDropdowns();
